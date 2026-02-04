@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #define MAX 100
 
 void limpar_buffer(); // Limpa o caralho do buffer
@@ -21,10 +22,10 @@ int main(){ // Main, link menu/funções
     } while(strcmp(option, "sair") != 0);
 
     return 0;
-}
+}   
 
 void criaMatriz(){
-    srand(1022);
+    srand(time(NULL));
     char dificuldade, nome[MAX]; int **matriz, TAM;
     printf("Você iniciu um novo jogo, digite seu nome para continuar: ");
     fgets(nome, MAX, stdin);
@@ -72,8 +73,6 @@ void criaMatriz(){
         }
         printf("\n");
     }
-        
-    return 0;
 }
 
 void limpar_buffer(){
