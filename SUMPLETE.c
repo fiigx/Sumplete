@@ -10,12 +10,13 @@
 #define GREEN(string)      ANSI_COLOR_GREEN      string ANSI_RESET
 typedef struct{
     int valor;
-    int estado;
+    int estadoP;
+    int estadoU;
 } Numero;
 
 void limpar_buffer(); // Limpa o caralho do buffer
 void novoJogo(); 
-void criaMatriz(Numero **matriz, int *TAM); // Função responsável por criar uma matriz e imprimir na tela
+void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela
 void adicionar(Numero **matriz, int l, int c);
 void remover(Numero **matriz, int l, int c);
 
@@ -37,21 +38,22 @@ int main(){ // Main, link menu/funções
 }   
 
 void novoJogo(){
-    Numero **matriz; int TAM; char opcao[MAX];
+    Numero **matriz; int TAM, estadoPL = 0, estadoPD = 0; char opcao[MAX];
 
     matriz = malloc((3+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
     for(int i = 0; i < 3+1; i++){ 
         matriz[i] = malloc((3+1) * sizeof(Numero));
     }
 
-    criaMatriz(matriz, &TAM);
-
+    criaMatriz(matriz, &TAM, &estadoPL, &estadoPD);
+    printf("%d %d\n\n", estadoPL, estadoPD); //apenas para saber quantos números estão ligados e quantos estão desligados. tirar depois
     do{
+        int estadoUL = 0, estadoUD = 0;
         for(int i = 0; i < TAM+1; i++){ // Impressão da matriz na tela.
             for(int j = 0; j < TAM+1; j++){ 
-                if(matriz[i][j].estado == 1)
+                if(matriz[i][j].estadoU == 1)
                     printf(GREEN("%d "), matriz[i][j].valor);
-                else if(matriz[i][j].estado == -1)
+                else if(matriz[i][j].estadoU == -1)
                     printf(RED("%d "), matriz[i][j].valor);
                 else
                     printf("%d ", matriz[i][j].valor);
@@ -75,7 +77,7 @@ void novoJogo(){
     } while(strcmp(opcao, "sair") != 0);
 }
 
-void criaMatriz(Numero **matriz, int *TAM){
+void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     srand(time(NULL));
     char dificuldade, nome[MAX];
 
@@ -103,31 +105,35 @@ void criaMatriz(Numero **matriz, int *TAM){
         matriz[i] = malloc((*TAM+1) * sizeof(Numero));
     }*/ //Isso aqui deveria estar nessa função, porém está na função na função "novoJogo", preciso tirar de lá para passar pra ca! 
     
-    for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estado nulo (0) para a última linha da matriz (soma).
-        matriz[*TAM][i].valor = 0; matriz[*TAM][i].estado = 0;
+    for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma).
+        matriz[*TAM][i].valor = 0; matriz[*TAM][i].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
-    for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estado nulo (0) para a última linha da matriz (soma)..
-        matriz[i][*TAM].valor = 0; matriz[i][*TAM].estado = 0;
+    for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma)..
+        matriz[i][*TAM].valor = 0; matriz[i][*TAM].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
     
     for(int i = 0; i < *TAM; i++){ // Estrutura de repetição para preencher a matriz e as dicas.
         for(int j = 0; j < *TAM; j++){
             matriz[i][j].valor = rand() % 10;
-            matriz[i][j].estado = 2;
+            matriz[i][j].estadoP = 2;
             if((rand() % 2) == 0){ // Validação do número e somatório das dicas.
                 matriz[i][*TAM].valor = matriz[i][*TAM].valor + matriz[i][j].valor;
                 matriz[*TAM][j].valor = matriz[*TAM][j].valor + matriz[i][j].valor;
+                (*estadoPL)++;
+            }
+            else{
+                (*estadoPD)++;
             }
         }
     }
 }
 
 void adicionar(Numero **matriz, int l, int c){
-    matriz[l-1][c-1].estado = 1;
+    matriz[l-1][c-1].estadoU = 1;
 }
 
 void remover(Numero **matriz, int l, int c){
-    matriz[l-1][c-1].estado = -1;
+    matriz[l-1][c-1].estadoU = -1;
 }
 
 void limpar_buffer(){
