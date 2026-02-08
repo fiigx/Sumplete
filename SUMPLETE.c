@@ -19,6 +19,8 @@ void novoJogo();
 void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela
 void adicionar(Numero **matriz, int l, int c);
 void remover(Numero **matriz, int l, int c);
+void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
+void resolver(Numero **matriz, int *TAM); // Resolve o jogo
 
 int main(){ // Main, link menu/funções
     char option[MAX];
@@ -47,23 +49,23 @@ void novoJogo(){
 
     criaMatriz(matriz, &TAM, &estadoPL, &estadoPD);
     do{
-        int estadoUL = 0, estadoUD = 0;
+        int estadoUL = 0, estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
         for(int i = 0; i < TAM+1; i++){ // Impressão da matriz na tela.
             for(int j = 0; j < TAM+1; j++){ 
                 if(matriz[i][j].estadoU == 1){
-                    printf(GREEN("%d "), matriz[i][j].valor);
-                    if(matriz[i][j].estadoU == matriz[i][j].estadoP){
-                        estadoUL++;
+                    printf(GREEN("%d "), matriz[i][j].valor); // Impressão do valor em cor verde (estado usuário ligado).
+                    if(matriz[i][j].estadoU == matriz[i][j].estadoP){ 
+                        estadoUL++; // Acrescenta mais um no contador do estado usário ligado.
                     }
                 }
                 else if(matriz[i][j].estadoU == -1){
-                    printf(RED("%d "), matriz[i][j].valor);
+                    printf(RED("%d "), matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
                     if(matriz[i][j].estadoU == matriz[i][j].estadoP){
-                        estadoUD++;
+                        estadoUD++; // Acrescenta mais um no contador do estado usário desligado.
                     }
                 }
                 else
-                    printf("%d ", matriz[i][j].valor);
+                    printf("%d ", matriz[i][j].valor); // Impressão do valor em cor normal.
             } 
             printf("\n");
         }
@@ -73,7 +75,7 @@ void novoJogo(){
             return 0;
         }
         
-        printf("Somatório do estadoPL:%d Somatório do estado PD:%d\nSomatório do estadoUL:%d Somatório do estadoUD:%d\n\n", estadoPL, estadoPD, estadoUL, estadoUD); //apenas para saber quantos números estão ligados e quantos estão desligados. tirar depois
+        //printf("Somatório do estadoPL:%d Somatório do estado PD:%d\nSomatório do estadoUL:%d Somatório do estadoUD:%d\n\n", estadoPL, estadoPD, estadoUL, estadoUD); //apenas para saber quantos números estão ligados e quantos estão desligados. tirar depois
 
         printf("\n\n");
         for(int i = 0; i < TAM+1; i++){ //estadosP do programa, tirar depois
@@ -95,6 +97,15 @@ void novoJogo(){
             int l, c;
             scanf("%d%d", &l, &c);
             remover(matriz, l, c);
+        }
+        else if(strcmp(opcao, "dica") == 0){
+            dica(matriz, &TAM);
+        }
+        else if(strcmp(opcao, "resolver") == 0){
+            resolver(matriz, &TAM);
+        }
+        else{
+            printf("Selecione uma opção válida");
         }
 
     } while(strcmp(opcao, "sair") != 0);
@@ -159,6 +170,34 @@ void adicionar(Numero **matriz, int l, int c){
 void remover(Numero **matriz, int l, int c){
     matriz[l-1][c-1].estadoU = -1;
 }
+
+void dica(Numero **matriz, int *TAM){
+    int validador = 0;
+    for(int i = 0; i < *TAM && validador == 0; i++){ // A dica está seguindo a órdem da matriz, seria bom colocar uma órdem aleátoria depois
+        for(int j = 0; j < *TAM; j++){
+            if(matriz[i][j].estadoU != -1 && matriz[i][j].estadoP == -1){
+                matriz[i][j].estadoU = -1;
+                printf("\n\n\nAqui funciona\n\n\n");
+                validador = 1;
+                break;
+            }
+        }
+    }
+}
+
+void resolver(Numero **matriz, int *TAM){ // Resolve o jogo.
+    for(int i = 0; i < *TAM; i++){ // Percorre a matriz inteira alterando o estadoU para +1 ou -1.
+        for(int j = 0; j < *TAM; j++){
+            if(matriz[i][j].estadoP == -1){ 
+                matriz[i][j].estadoU = -1;
+            }
+            else{
+                matriz[i][j].estadoU = 1;
+            }
+        }
+    }
+}
+
 
 void limpar_buffer(){
    int ch;
