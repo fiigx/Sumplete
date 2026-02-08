@@ -46,20 +46,43 @@ void novoJogo(){
     }
 
     criaMatriz(matriz, &TAM, &estadoPL, &estadoPD);
-    printf("%d %d\n\n", estadoPL, estadoPD); //apenas para saber quantos números estão ligados e quantos estão desligados. tirar depois
     do{
         int estadoUL = 0, estadoUD = 0;
         for(int i = 0; i < TAM+1; i++){ // Impressão da matriz na tela.
             for(int j = 0; j < TAM+1; j++){ 
-                if(matriz[i][j].estadoU == 1)
+                if(matriz[i][j].estadoU == 1){
                     printf(GREEN("%d "), matriz[i][j].valor);
-                else if(matriz[i][j].estadoU == -1)
+                    if(matriz[i][j].estadoU == matriz[i][j].estadoP){
+                        estadoUL++;
+                    }
+                }
+                else if(matriz[i][j].estadoU == -1){
                     printf(RED("%d "), matriz[i][j].valor);
+                    if(matriz[i][j].estadoU == matriz[i][j].estadoP){
+                        estadoUD++;
+                    }
+                }
                 else
                     printf("%d ", matriz[i][j].valor);
             } 
             printf("\n");
         }
+
+        if(estadoUD == estadoPD){
+            printf("Parabéns seu fudido, você ganhou!\n");
+            return 0;
+        }
+        
+        printf("Somatório do estadoPL:%d Somatório do estado PD:%d\nSomatório do estadoUL:%d Somatório do estadoUD:%d\n\n", estadoPL, estadoPD, estadoUL, estadoUD); //apenas para saber quantos números estão ligados e quantos estão desligados. tirar depois
+
+        printf("\n\n");
+        for(int i = 0; i < TAM+1; i++){ //estadosP do programa, tirar depois
+            for(int j = 0; j < TAM+1; j++){
+                printf("%d ", matriz[i][j].estadoP);
+            }  
+            printf("\n");
+        }
+
         printf("O que você quer fazer: ");
         scanf("%s", opcao);
         
@@ -112,13 +135,14 @@ void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
         matriz[i][*TAM].valor = 0; matriz[i][*TAM].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
     
-    for(int i = 0; i < *TAM; i++){ // Estrutura de repetição para preencher a matriz e as dicas.
+    for(int i = 0; i < *TAM; i++){ // Estrutura de repetição para preencher a matriz e as dicas. comentar melhor depois
         for(int j = 0; j < *TAM; j++){
-            matriz[i][j].valor = rand() % 10;
-            matriz[i][j].estadoP = 2;
-            if((rand() % 2) == 0){ // Validação do número e somatório das dicas.
+            matriz[i][j].valor = (rand() % 9) + 1;
+            matriz[i][j].estadoP = -1;
+            if((rand() % 2) == 0){ // Validação do número e somatório das dicas. comentar melhor depois
                 matriz[i][*TAM].valor = matriz[i][*TAM].valor + matriz[i][j].valor;
                 matriz[*TAM][j].valor = matriz[*TAM][j].valor + matriz[i][j].valor;
+                matriz[i][j].estadoP = 1;
                 (*estadoPL)++;
             }
             else{
