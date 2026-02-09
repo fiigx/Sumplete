@@ -1,8 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <locale.h> // Para acentua��es brasileiras funcionarem 
+#include <stdio.h> // Para funções básicas, como printf e scanf.
+#include <stdlib.h> // Para alocar memória dinamicamente.
+#include <string.h> // Para manipulação de strings.
+#include <time.h> // Para pegar o tempo do pc e usar srand().
+#include <sys/time.h> // Para calcular o tempo.
+#include <locale.h> // Para acentuações brasileiras funcionarem.
 #define MAX 100
 #define ANSI_BOLD             "\x1b[1m"
 #define ANSI_DIM "\x1b[2m"
@@ -19,17 +20,19 @@ typedef struct{
     int estadoU;
 } Numero;
 
-void limpar_buffer(); // Limpa o caralho do buffer
 void novoJogo(); 
 void ajuda();
-void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela
+int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela
 void adicionar(Numero **matriz, int l, int c);
 void remover(Numero **matriz, int l, int c);
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
 void resolver(Numero **matriz, int *TAM); // Resolve o jogo
+void liberaMatriz(Numero **matriz, int *TAM); // Libera a mem�ria alocada para a matriz.
+double tempo_decorrido(struct timeval inicio, struct timeval fim); // Calcular o tempo decorrido
+void limpar_buffer(); // Limpa o buffer
 
 int main(){ // Main, link menu/funções
-    setlocale(LC_ALL, "Portuguese"); // Para acentua��es brasileiras funcionarem 
+    setlocale(LC_ALL, "Portuguese"); // Para acentua��es brasileiras funcionarem 
 
     char opcao[MAX];
     printf("Bem vindo ao Jogo SUMPLETE:\n\nComandos do jogo:\n- (sair)\n- (novo)\n- (ajuda)\nSelecione um dos comandos anteriores escrevendo-o a seguir: ");
@@ -43,7 +46,7 @@ int main(){ // Main, link menu/funções
             ajuda();
         }
         else{
-            printf("Selecione uma op��o v�lida: ");
+            printf("Selecione uma op��o v�lida: ");
         }
     } while(strcmp(opcao, "sair") != 0);
 
@@ -53,13 +56,13 @@ int main(){ // Main, link menu/funções
 void novoJogo(){
     Numero **matriz; int TAM, estadoPL = 0, estadoPD = 0; char opcao[MAX];
 
-    matriz = malloc((3+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
-    for(int i = 0; i < 3+1; i++){ 
-        matriz[i] = malloc((3+1) * sizeof(Numero));
-    }
+    matriz = criaMatriz(matriz, &TAM, &estadoPL, &estadoPD);
 
-    criaMatriz(matriz, &TAM, &estadoPL, &estadoPD);
     do{
+        struct timeval t0, t1; // Estrutura para medição do tempo.
+        gettimeofday(&t0, NULL); // Começa a contagem.
+        for(long i=0;i<500000000;i++);
+
         int estadoUL = 0, estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
         for(int i = 0; i < TAM+1; i++){ // Impressão da matriz na tela.
             for(int j = 0; j < TAM+1; j++){ 
@@ -77,23 +80,26 @@ void novoJogo(){
                 }
                 else if(j == TAM || i == TAM){
                     printf(DIM("%d "), matriz[i][j].valor); // Impressão do valor em cor normal.
-                    //printf(BOLD("%d "), matriz[i][j].valor);
                 }
                 else
-                    //printf("%d ", matriz[i][j].valor); // Impressão do valor em cor normal.
                     printf(BOLD("%d "), matriz[i][j].valor);
             } 
             printf("\n");
         }
 
-        if(estadoUD == estadoPD){
-            printf("Parab�ns seu fudido, voc� ganhou!\n");
+        if(estadoUD == estadoPD){ // Verifica a condi��o de vit�ria e printa uma mensagem de vit�ria.
+            printf("Parabéns seu fudido, você ganhou!\n");
+            gettimeofday(&t1, NULL);
+            long s  = t1.tv_sec  - t0.tv_sec;
+            long us = t1.tv_usec - t0.tv_usec;
+            double tempo = s + us * 1e-6;
+            printf("Tempo: %.6f segundos\n", tempo);
+            liberaMatriz(matriz, TAM); // Preciso ver se a fun��o de fato est� liberando a matriz de maneira correta depois 
             return 0;
         }
         
-        //printf("Somatório do estadoPL:%d Somatório do estado PD:%d\nSomatório do estadoUL:%d Somatório do estadoUD:%d\n\n", estadoPL, estadoPD, estadoUL, estadoUD); //apenas para saber quantos números estão ligados e quantos estão desligados. tirar depois
+        printf("\n"); //Tirar depois
 
-        printf("\n\n");
         for(int i = 0; i < TAM+1; i++){ //estadosP do programa, tirar depois
             for(int j = 0; j < TAM+1; j++){
                 printf("%d ", matriz[i][j].estadoP);
@@ -101,7 +107,7 @@ void novoJogo(){
             printf("\n");
         }
 
-        printf("O que voc� quer fazer: ");
+        printf("O que voc� quer fazer: ");
         scanf("%s", opcao);
         
         if(strcmp(opcao, "adicionar") == 0){ // Talvez mudar isso depois.
@@ -121,39 +127,35 @@ void novoJogo(){
             resolver(matriz, &TAM);
         }
         else{
-            printf("Selecione uma op��o v�lida");
+            printf("Selecione uma op��o v�lida");
         }
 
     } while(strcmp(opcao, "sair") != 0);
 }
 
-void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
+int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     srand(time(NULL));
     char dificuldade, nome[MAX];
 
-    printf("Voc� iniciu um novo jogo, digite seu nome para continuar: ");
+    printf("Voc� iniciu um novo jogo, digite seu nome para continuar: ");
     fgets(nome, MAX, stdin);
 
-    printf("Selecione a dificuldade do jogo:\nf: n�vel f�cil, tamanho 3x3.\nm: n�vel m�dio, tamanho 5x5\nd: n�vel dif�cil, tamanho 7x7.\n");
+    printf("Selecione a dificuldade do jogo:\nf: n�vel f�cil, tamanho 3x3.\nm: n�vel m�dio, tamanho 5x5\nd: n�vel dif�cil, tamanho 7x7.\n");
     scanf("%c", &dificuldade);
 
-    if(dificuldade == 'f'){ // Seleção de dificuldade e mudança de tamanho da matriz
+    if(dificuldade == 'f') // Seleção de dificuldade e mudança de tamanho da matriz
         *TAM = 3;
-    }
-    else if(dificuldade == 'm'){
+    else if(dificuldade == 'm')
         *TAM = 5;
-    }
-    else if(dificuldade == 'd'){
+    else if(dificuldade == 'd')
         *TAM = 7;
-    }
-    else{
-        printf("DIGITE UMA DIFICULDADE V�LIDA");
-    }
+    else
+        printf("DIGITE UMA DIFICULDADE V�LIDA");
 
-    /*matriz = malloc((*TAM+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
+    matriz = malloc((*TAM+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
     for(int i = 0; i < *TAM+1; i++){ 
         matriz[i] = malloc((*TAM+1) * sizeof(Numero));
-    }*/ //Isso aqui deveria estar nessa função, porém está na função na função "novoJogo", preciso tirar de lá para passar pra ca! 
+    } 
     
     for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma).
         matriz[*TAM][i].valor = 0; matriz[*TAM][i].estadoP = 0; matriz[*TAM][i].estadoU = 0;
@@ -177,6 +179,7 @@ void criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
             }
         }
     }
+    return matriz;
 }
 
 void adicionar(Numero **matriz, int l, int c){
@@ -211,13 +214,26 @@ void resolver(Numero **matriz, int *TAM){ // Resolve o jogo.
             }
         }
     }
+}   
+
+void liberaMatriz(Numero **matriz, int *TAM){ // Preciso verificar se está certo depois
+    for(int i = 0; i < (*TAM)+1; i++){
+        free(matriz[i]);
+    }
+    free(matriz);
 }
 
-void ajuda(){
-    printf("\nComandos: \nObjetivo:\nEm cada linha e coluna, os n�meros que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada c�lula pode: manter ou remover o n�mero.\n-N�meros removidos n�o contam na soma.\n-Voc� decide quais n�meros apagar at� todas as somas baterem.\n\nVit�ria:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
+void ajuda(){ 
+    printf("\nComandos: \nObjetivo:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada célula pode: manter ou remover o n�mero.\n-Números removidos não contam na soma.\n-Você decide quais números apagar até todas as somas baterem.\n\nVitória:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
 }
 
-void limpar_buffer(){
+double tempo_decorrido(struct timeval inicio, struct timeval fim){ // Para calcular o tempo decorrido sempre que chamada.
+    long sec = fim.tv_sec - inicio.tv_sec;
+    long microsec = fim.tv_usec - inicio.tv_usec;
+    return sec + microsec * 1e-6;
+}
+
+void limpar_buffer(){ // Para limpar o buffer.
    int ch;
    while ((ch = getchar()) != '\n' && ch != EOF);
 }
