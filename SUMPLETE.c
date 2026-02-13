@@ -79,14 +79,37 @@ void novoJogo(){
                         estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                     }
                 }
-                else if(j == TAM || i == TAM){
-
-                    /*for(int k = 0; k < TAM; k++){
-                        for(int l = 0; l < TAM; l++){
-
-                        if(matriz[][k].estadoU == */
-                    printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                else if(j == TAM){ // Impressão das dicas da direita.
+                    int somaL = 0;
+                    for(int k = 0; k < TAM; k++){ // Somatório dos números que não estão apagados.
+                        if(matriz[i][k].estadoU != -1){
+                            somaL = somaL + matriz[i][k].valor;
+                        }
+                    }
+                    if(somaL == matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
+                        printf(BOLD("%d "), matriz[i][j].valor);
+                    }
+                    else{
+                        printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                    }
                 }
+                else if(i == TAM){ // Impressão das dicas de baixo.
+                    int somaC = 0;
+                    for(int k = 0; k < TAM; k++){ // Somatório dos números que não estão apagados.
+                        if(matriz[k][j].estadoU != -1){
+                            somaC = somaC + matriz[k][j].valor;
+                        }
+                    }
+                    if(somaC == matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
+                        printf(BOLD("%d "), matriz[i][j].valor);
+                    }
+                    else{
+                        printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                    }
+                }
+                else if((i == 3) && (j == 3)){ // Apenas para não printar a posição TAM.TAM, não está funcionando, resolver depois
+                    printf("P ");
+                } 
                 else
                     printf(BOLD("%d "), matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
             } 
