@@ -26,10 +26,11 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Fun�
 void adicionar(Numero **matriz, int l, int c);
 void remover(Numero **matriz, int l, int c);
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
-void resolver(Numero **matriz, int *TAM); // Resolve o jogo
+void resolver(Numero **matriz, int *TAM); // Resolve o jogo.
+int verificaVitoria(int **matriz, int estadoUD, int estadoPD); // Verifica se as condições de vitória estão satisfeitas.
 void liberaMatriz(Numero **matriz, int *TAM); // Libera a mem�ria alocada para a matriz.
-double tempo_decorrido(struct timeval inicio, struct timeval fim); // Calcular o tempo decorrido
-void limpar_buffer(); // Limpa o buffer
+double tempo_decorrido(struct timeval inicio, struct timeval fim); // Calcular o tempo decorrido.
+void limpar_buffer(); // Limpa o buffer.
 
 int main(){ // Main, link menu/funções
     setlocale(LC_ALL, "Portuguese"); // Para acentua��es brasileiras funcionarem 
@@ -46,7 +47,7 @@ int main(){ // Main, link menu/funções
             ajuda();
         }
         else{
-            printf("Selecione uma op��o v�lida: ");
+            printf("Selecione uma opção válida: ");
         }
     } while(strcmp(opcao, "sair") != 0);
 
@@ -75,19 +76,27 @@ void novoJogo(){
                 else if(matriz[i][j].estadoU == -1){
                     printf(BOLD(RED("%d ")), matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
                     if(matriz[i][j].estadoU == matriz[i][j].estadoP){
-                        estadoUD++; // Acrescenta mais um no contador do estado usário desligado.
+                        estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                     }
                 }
                 else if(j == TAM || i == TAM){
-                    printf(DIM("%d "), matriz[i][j].valor); // Impressão do valor em cor normal.
+
+                    /*for(int k = 0; k < TAM; k++){
+                        for(int l = 0; l < TAM; l++){
+
+                        if(matriz[][k].estadoU == */
+                    printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                 }
                 else
-                    printf(BOLD("%d "), matriz[i][j].valor);
+                    printf(BOLD("%d "), matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
             } 
             printf("\n");
         }
 
-        if(estadoUD == estadoPD){ // Verifica a condi��o de vit�ria e printa uma mensagem de vit�ria.
+        if(verificaVitoria(matriz, estadoUD, estadoPD) == 1){
+            return 0; // Programa sai, mas talvez eu queira mudar depois
+        }
+        /*if(estadoUD == estadoPD){ // Verifica a condi��o de vit�ria e printa uma mensagem de vit�ria.
             printf("Parabéns seu fudido, você ganhou!\n");
             gettimeofday(&t1, NULL);
             long s  = t1.tv_sec  - t0.tv_sec;
@@ -96,7 +105,7 @@ void novoJogo(){
             printf("Tempo: %.6f segundos\n", tempo);
             liberaMatriz(matriz, TAM); // Preciso ver se a fun��o de fato est� liberando a matriz de maneira correta depois 
             return 0;
-        }
+        }*/
         
         printf("\n"); //Tirar depois
 
@@ -107,7 +116,7 @@ void novoJogo(){
             printf("\n");
         }
 
-        printf("O que voc� quer fazer: ");
+        printf("O que você quer fazer: ");
         scanf("%s", opcao);
         
         if(strcmp(opcao, "adicionar") == 0){ // Talvez mudar isso depois.
@@ -126,8 +135,13 @@ void novoJogo(){
         else if(strcmp(opcao, "resolver") == 0){
             resolver(matriz, &TAM);
         }
+        else if(strcmp(opcao, "salvar") == 0){ // Salva o jogo e recolhe o nome do arquivo de save.
+            char arqNome[MAX];
+            scanf("%s", arqNome);
+            //salvarJogo(); 
+        }
         else{
-            printf("Selecione uma op��o v�lida");
+            printf("Selecione uma opção válida");
         }
 
     } while(strcmp(opcao, "sair") != 0);
@@ -140,7 +154,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     printf("Voc� iniciu um novo jogo, digite seu nome para continuar: ");
     fgets(nome, MAX, stdin);
 
-    printf("Selecione a dificuldade do jogo:\nf: n�vel f�cil, tamanho 3x3.\nm: n�vel m�dio, tamanho 5x5\nd: n�vel dif�cil, tamanho 7x7.\n");
+    printf("Selecione a dificuldade do jogo:\nf: nível fácil, tamanho 3x3.\nm: nével médio, tamanho 5x5\nd: nível difícil, tamanho 7x7.\n");
     scanf("%c", &dificuldade);
 
     if(dificuldade == 'f') // Seleção de dificuldade e mudança de tamanho da matriz
@@ -150,7 +164,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     else if(dificuldade == 'd')
         *TAM = 7;
     else
-        printf("DIGITE UMA DIFICULDADE V�LIDA");
+        printf("DIGITE UMA DIFICULDADE VÁLIDA");
 
     matriz = malloc((*TAM+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
     for(int i = 0; i < *TAM+1; i++){ 
@@ -182,7 +196,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     return matriz;
 }
 
-void adicionar(Numero **matriz, int l, int c){
+void adicionar(Numero **matriz, int l, int c){              
     matriz[l-1][c-1].estadoU = 1;
 }
 
@@ -225,6 +239,22 @@ void liberaMatriz(Numero **matriz, int *TAM){ // Preciso verificar se está cert
 
 void ajuda(){ 
     printf("\nComandos: \nObjetivo:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada célula pode: manter ou remover o n�mero.\n-Números removidos não contam na soma.\n-Você decide quais números apagar até todas as somas baterem.\n\nVitória:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
+}
+
+int verificaVitoria(int **matriz, int estadoUD, int estadoPD){
+    if(estadoUD == estadoPD){ // Verifica a condição de vitória e printa uma mensagem de vitória.
+        printf("Parabéns seu fudido, você ganhou!\n");
+        /*gettimeofday(&t1, NULL);
+        long s  = t1.tv_sec  - t0.tv_sec;
+        long us = t1.tv_usec - t0.tv_usec;
+        double tempo = s + us * 1e-6;
+        printf("Tempo: %.6f segundos\n", tempo);*/
+        //liberaMatriz(matriz, TAM); // Preciso ver se a função de fato está liberando a matriz de maneira correta depois 
+        return 1;
+    }
+    else{
+        return 0;
+    }
 }
 
 double tempo_decorrido(struct timeval inicio, struct timeval fim){ // Para calcular o tempo decorrido sempre que chamada.
