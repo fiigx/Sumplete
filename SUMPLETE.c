@@ -4,7 +4,9 @@
 #include <time.h> // Para pegar o tempo do pc e usar srand().
 #include <sys/time.h> // Para calcular o tempo.
 #include <locale.h> // Para acentuações brasileiras funcionarem.
-#define MAX 100
+#define MAX 100 // Usado para algumas strings.
+
+// Definição de Macros e adição de cores para o jogo:
 #define ANSI_BOLD             "\x1b[1m"
 #define ANSI_DIM "\x1b[2m"
 #define ANSI_COLOR_GREEN      "\x1b[32m"
@@ -14,26 +16,27 @@
 #define BOLD(string)       ANSI_BOLD             string ANSI_RESET
 #define RED(string)        ANSI_COLOR_RED        string ANSI_RESET
 #define GREEN(string)      ANSI_COLOR_GREEN      string ANSI_RESET
-typedef struct{
+
+typedef struct{ // Cria uma estrutura que será usada para cada posiçaõ da matriz.
     int valor;
     int estadoP;
     int estadoU;
 } Numero;
 
 void novoJogo(); 
-void ajuda();
+void ajuda(); // Apresenta ao usuário suas opções de comandos.
 int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela
-void adicionar(Numero **matriz, int l, int c);
-void remover(Numero **matriz, int l, int c);
+void adicionar(Numero **matriz, int l, int c); // Adiciona um número como verdadeiro, estadoU = 1.
+void remover(Numero **matriz, int l, int c); // Adiciona um número como falso, estadoU = -1.
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
 void resolver(Numero **matriz, int *TAM); // Resolve o jogo.
 int verificaVitoria(int **matriz, int estadoUD, int estadoPD); // Verifica se as condições de vitória estão satisfeitas.
-void liberaMatriz(Numero **matriz, int *TAM); // Libera a mem�ria alocada para a matriz.
+void liberaMatriz(Numero **matriz, int *TAM); // Libera a memória alocada para a matriz.
 double tempo_decorrido(struct timeval inicio, struct timeval fim); // Calcular o tempo decorrido.
 void limpar_buffer(); // Limpa o buffer.
 
 int main(){ // Main, link menu/funções
-    setlocale(LC_ALL, "Portuguese"); // Para acentua��es brasileiras funcionarem 
+    setlocale(LC_ALL, "Portuguese"); // Para acentuações brasileiras funcionarem 
 
     char opcao[MAX];
     printf("Bem vindo ao Jogo SUMPLETE:\n\nComandos do jogo:\n- (sair)\n- (novo)\n- (ajuda)\nSelecione um dos comandos anteriores escrevendo-o a seguir: ");
@@ -55,9 +58,9 @@ int main(){ // Main, link menu/funções
 }   
 
 void novoJogo(){
-    Numero **matriz; int TAM, estadoPL = 0, estadoPD = 0; char opcao[MAX];
+    Numero **matriz; int TAM, estadoPL = 0, estadoPD = 0; char opcao[MAX]; // Declaração de variáveis que vão ser usadas.
 
-    matriz = criaMatriz(matriz, &TAM, &estadoPL, &estadoPD);
+    matriz = criaMatriz(matriz, &TAM, &estadoPL, &estadoPD); // Cria uma matriz e ela é adicionada a variável "matriz".
 
     do{
         struct timeval t0, t1; // Estrutura para medição do tempo.
@@ -107,8 +110,8 @@ void novoJogo(){
                         printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                     }
                 }
-                else if((i == 3) && (j == 3)){ // Apenas para não printar a posição TAM.TAM, não está funcionando, resolver depois
-                    printf("P ");
+                else if((i == TAM) && (j == TAM)){ // Apenas para não printar a posição TAM.TAM, não está funcionando, resolver depois
+                     printf(BOLD(GREEN("P ")));
                 } 
                 else
                     printf(BOLD("%d "), matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
@@ -130,16 +133,19 @@ void novoJogo(){
             return 0;
         }*/
         
-        printf("\n"); //Tirar depois
 
+        // Printa o estadoP de toma a matriz, apenas para verificação.
+        /*printf("\n"); //Tirar depois
         for(int i = 0; i < TAM+1; i++){ //estadosP do programa, tirar depois
             for(int j = 0; j < TAM+1; j++){
                 printf("%d ", matriz[i][j].estadoP);
             }  
             printf("\n");
-        }
+        }*/
 
-        printf("O que você quer fazer: ");
+
+
+        printf("O que você quer fazer: "); // Seleção de comando.
         scanf("%s", opcao);
         
         if(strcmp(opcao, "adicionar") == 0){ // Talvez mudar isso depois.
@@ -174,7 +180,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     srand(time(NULL));
     char dificuldade, nome[MAX];
 
-    printf("Voc� iniciu um novo jogo, digite seu nome para continuar: ");
+    printf("Você iniciu um novo jogo, digite seu nome para continuar: ");
     fgets(nome, MAX, stdin);
 
     printf("Selecione a dificuldade do jogo:\nf: nível fácil, tamanho 3x3.\nm: nével médio, tamanho 5x5\nd: nível difícil, tamanho 7x7.\n");
@@ -219,11 +225,11 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     return matriz;
 }
 
-void adicionar(Numero **matriz, int l, int c){              
+void adicionar(Numero **matriz, int l, int c){ // Adiciona um número como verdadeiro, estadoU = 1.          
     matriz[l-1][c-1].estadoU = 1;
 }
 
-void remover(Numero **matriz, int l, int c){
+void remover(Numero **matriz, int l, int c){ // Adiciona um número como falso, estadoU = -1.
     matriz[l-1][c-1].estadoU = -1;
 }
 
@@ -260,7 +266,7 @@ void liberaMatriz(Numero **matriz, int *TAM){ // Preciso verificar se está cert
     free(matriz);
 }
 
-void ajuda(){ 
+void ajuda(){ // Printa os comandos disponíveis para o usuário.
     printf("\nComandos: \nObjetivo:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada célula pode: manter ou remover o n�mero.\n-Números removidos não contam na soma.\n-Você decide quais números apagar até todas as somas baterem.\n\nVitória:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
 }
 
