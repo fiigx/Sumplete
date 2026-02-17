@@ -24,8 +24,8 @@ typedef struct{ // Cria uma estrutura que será usada para cada posiçaõ da mat
 } Numero;
 
 void novoJogo(); 
-void ajuda(); // Apresenta ao usuário suas opções de comandos.
-int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela
+void ajuda(int *ajuda); // Apresenta ao usuário suas opções de comandos.
+int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela.
 void adicionar(Numero **matriz, int l, int c); // Adiciona um número como verdadeiro, estadoU = 1.
 void remover(Numero **matriz, int l, int c); // Adiciona um número como falso, estadoU = -1.
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
@@ -47,10 +47,11 @@ int main(){ // Main, link menu/funções
             novoJogo();
         }
         else if(strcmp(opcao, "ajuda") == 0){
-            ajuda();
+            int ajudaMenu = 1;
+            ajuda(&ajudaMenu);
         }
         else{
-            printf("Selecione uma opção válida: ");
+            printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
         }
     } while(strcmp(opcao, "sair") != 0);
 
@@ -82,7 +83,7 @@ void novoJogo(){
                         estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                     }
                 }
-                else if(j == TAM){ // Impressão das dicas da direita.
+                else if(j == TAM && i != TAM){ // Impressão das dicas da direita.
                     int somaL = 0;
                     for(int k = 0; k < TAM; k++){ // Somatório dos números que não estão apagados.
                         if(matriz[i][k].estadoU != -1){
@@ -96,7 +97,7 @@ void novoJogo(){
                         printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                     }
                 }
-                else if(i == TAM){ // Impressão das dicas de baixo.
+                else if(i == TAM && j != TAM){ // Impressão das dicas de baixo.
                     int somaC = 0;
                     for(int k = 0; k < TAM; k++){ // Somatório dos números que não estão apagados.
                         if(matriz[k][j].estadoU != -1){
@@ -108,10 +109,9 @@ void novoJogo(){
                     }
                     else{
                         printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
-                    }
+                    }   
                 }
-                else if((i == TAM) && (j == TAM)){ // Apenas para não printar a posição TAM.TAM, não está funcionando, resolver depois
-                     printf(BOLD(GREEN("P ")));
+                else if((i == TAM) && (j == TAM)){ // Apenas para não printar a posição TAM.TAM.
                 } 
                 else
                     printf(BOLD("%d "), matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
@@ -143,35 +143,40 @@ void novoJogo(){
             printf("\n");
         }*/
 
-
-
         printf("O que você quer fazer: "); // Seleção de comando.
-        scanf("%s", opcao);
-        
-        if(strcmp(opcao, "adicionar") == 0){ // Talvez mudar isso depois.
-            int l, c;
-            scanf("%d%d", &l, &c);
-            adicionar(matriz, l, c);
+        do{
+            scanf("%s", opcao);
+            
+            if(strcmp(opcao, "adicionar") == 0){ // Talvez mudar isso depois.
+                int l, c;
+                scanf("%d%d", &l, &c);
+                adicionar(matriz, l, c);
+            }
+            else if(strcmp(opcao, "remover") == 0){ // Talvez mudar isso depois.
+                int l, c;
+                scanf("%d%d", &l, &c);
+                remover(matriz, l, c);
+            }
+            else if(strcmp(opcao, "dica") == 0){
+                dica(matriz, &TAM);
+            }
+            else if(strcmp(opcao, "resolver") == 0){
+                resolver(matriz, &TAM);
+            }
+            else if(strcmp(opcao, "salvar") == 0){ // Salva o jogo e recolhe o nome do arquivo de save.
+                char arqNome[MAX];
+                scanf("%s", arqNome);
+                //salvarJogo(); 
+            }
+            else if(strcmp(opcao, "ajuda") == 0){
+                int ajudaJogo = 2;
+                ajuda(&ajudaJogo);
+            }
+            else{
+                printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: "); // Implementar ajuda auqi depois
+            }
         }
-        else if(strcmp(opcao, "remover") == 0){ // Talvez mudar isso depois.
-            int l, c;
-            scanf("%d%d", &l, &c);
-            remover(matriz, l, c);
-        }
-        else if(strcmp(opcao, "dica") == 0){
-            dica(matriz, &TAM);
-        }
-        else if(strcmp(opcao, "resolver") == 0){
-            resolver(matriz, &TAM);
-        }
-        else if(strcmp(opcao, "salvar") == 0){ // Salva o jogo e recolhe o nome do arquivo de save.
-            char arqNome[MAX];
-            scanf("%s", arqNome);
-            //salvarJogo(); 
-        }
-        else{
-            printf("Selecione uma opção válida");
-        }
+        while( (strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
 
     } while(strcmp(opcao, "sair") != 0);
 }
@@ -183,17 +188,20 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     printf("Você iniciu um novo jogo, digite seu nome para continuar: ");
     fgets(nome, MAX, stdin);
 
-    printf("Selecione a dificuldade do jogo:\nf: nível fácil, tamanho 3x3.\nm: nével médio, tamanho 5x5\nd: nível difícil, tamanho 7x7.\n");
-    scanf("%c", &dificuldade);
-
-    if(dificuldade == 'f') // Seleção de dificuldade e mudança de tamanho da matriz
-        *TAM = 3;
-    else if(dificuldade == 'm')
-        *TAM = 5;
-    else if(dificuldade == 'd')
-        *TAM = 7;
-    else
-        printf("DIGITE UMA DIFICULDADE VÁLIDA");
+    printf("Selecione a dificuldade do jogo:\n- (f) nível fácil, tamanho 3x3.\n- (m) nével médio, tamanho 5x5.\n- (d) nível difícil, tamanho 7x7.\n");
+    do{ // Seleção de dificuldade e mudança de tamanho da matriz.
+        scanf(" %c", &dificuldade);
+        limpar_buffer();
+        if(dificuldade == 'f') 
+            *TAM = 3;
+        else if(dificuldade == 'm')
+            *TAM = 5;
+        else if(dificuldade == 'd')
+            *TAM = 7;
+        else
+            printf("DIGITE UMA DIFICULDADE VÁLIDA: ");
+    }
+    while((dificuldade != 'f') && (dificuldade != 'm') && (dificuldade != 'd')); // Loop até digitar uma dificuldade válida.
 
     matriz = malloc((*TAM+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
     for(int i = 0; i < *TAM+1; i++){ 
@@ -203,7 +211,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma).
         matriz[*TAM][i].valor = 0; matriz[*TAM][i].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
-    for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma)..
+    for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma).
         matriz[i][*TAM].valor = 0; matriz[i][*TAM].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
     
@@ -266,8 +274,15 @@ void liberaMatriz(Numero **matriz, int *TAM){ // Preciso verificar se está cert
     free(matriz);
 }
 
-void ajuda(){ // Printa os comandos disponíveis para o usuário.
-    printf("\nComandos: \nObjetivo:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada célula pode: manter ou remover o n�mero.\n-Números removidos não contam na soma.\n-Você decide quais números apagar até todas as somas baterem.\n\nVitória:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
+void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
+    if(*ajuda == 1){
+        printf("\nComandos disponíveis: \nComo jogar:\nObjetivo:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada célula pode: manter ou remover o n�mero.\n-Números removidos não contam na soma.\n-Você decide quais números apagar até todas as somas baterem.\n\nVitória:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
+        *ajuda == 0;
+    }
+    else if(*ajuda == 2){
+        printf("Comandos disponíveis:\n - (adicionar \"x\" \"y\"): seleciona um número para adicionar\n - (remover \"x\" \"y\"): seleciona um número para remover\n - (dica): retira um número falso\n - (resolver): resolve o puzzle\n"); // Por todos os comandos aqui depois
+        *ajuda = 0;
+    }
 }
 
 int verificaVitoria(int **matriz, int estadoUD, int estadoPD){
