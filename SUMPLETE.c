@@ -2,7 +2,6 @@
 #include <stdlib.h> // Para alocar memória dinamicamente.
 #include <string.h> // Para manipulação de strings.
 #include <time.h> // Para pegar o tempo do pc e usar srand().
-#include <sys/time.h> // Para calcular o tempo.
 #include <locale.h> // Para acentuações brasileiras funcionarem.
 #define MAX 100 // Usado para algumas strings.
 
@@ -16,6 +15,8 @@
 #define BOLD(string)       ANSI_BOLD             string ANSI_RESET
 #define RED(string)        ANSI_COLOR_RED        string ANSI_RESET
 #define GREEN(string)      ANSI_COLOR_GREEN      string ANSI_RESET
+
+
 
 typedef struct{ // Cria uma estrutura que será usada para cada posiçaõ da matriz.
     int valor;
@@ -32,7 +33,6 @@ void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertec
 void resolver(Numero **matriz, int *TAM); // Resolve o jogo.
 int verificaVitoria(int **matriz, int estadoUD, int estadoPD); // Verifica se as condições de vitória estão satisfeitas.
 void liberaMatriz(Numero **matriz, int *TAM); // Libera a memória alocada para a matriz.
-double tempo_decorrido(struct timeval inicio, struct timeval fim); // Calcular o tempo decorrido.
 void limpar_buffer(); // Limpa o buffer.
 
 int main(){ // Main, link menu/funções
@@ -63,11 +63,12 @@ void novoJogo(){
 
     matriz = criaMatriz(matriz, &TAM, &estadoPL, &estadoPD); // Cria uma matriz e ela é adicionada a variável "matriz".
 
-    do{
-        struct timeval t0, t1; // Estrutura para medição do tempo.
-        gettimeofday(&t0, NULL); // Começa a contagem.
-        for(long i=0;i<500000000;i++);
+    time_t inicioJogo, fimJogo;
+    inicioJogo = time(NULL); // talvez eu devesse mudar isso de lugar depois
 
+
+    do{
+                
         int estadoUL = 0, estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
         for(int i = 0; i < TAM+1; i++){ // Impressão da matriz na tela.
             for(int j = 0; j < TAM+1; j++){ 
@@ -120,18 +121,18 @@ void novoJogo(){
         }
 
         if(verificaVitoria(matriz, estadoUD, estadoPD) == 1){
+
+            
+
+            double tempoGasto;
+            printf("Voce venceu!\n");
+            fimJogo = time(NULL);
+
+            tempoGasto = difftime(fimJogo, inicioJogo);
+
+            printf("Tempo total: %.0f segundos\n", tempoGasto);
             return 0; // Programa sai, mas talvez eu queira mudar depois
         }
-        /*if(estadoUD == estadoPD){ // Verifica a condi��o de vit�ria e printa uma mensagem de vit�ria.
-            printf("Parabéns seu fudido, você ganhou!\n");
-            gettimeofday(&t1, NULL);
-            long s  = t1.tv_sec  - t0.tv_sec;
-            long us = t1.tv_usec - t0.tv_usec;
-            double tempo = s + us * 1e-6;
-            printf("Tempo: %.6f segundos\n", tempo);
-            liberaMatriz(matriz, TAM); // Preciso ver se a fun��o de fato est� liberando a matriz de maneira correta depois 
-            return 0;
-        }*/
         
 
         // Printa o estadoP de toma a matriz, apenas para verificação.
@@ -175,8 +176,7 @@ void novoJogo(){
             else{
                 printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: "); // Implementar ajuda auqi depois
             }
-        }
-        while( (strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
+        } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
 
     } while(strcmp(opcao, "sair") != 0);
 }
@@ -288,23 +288,12 @@ void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
 int verificaVitoria(int **matriz, int estadoUD, int estadoPD){
     if(estadoUD == estadoPD){ // Verifica a condição de vitória e printa uma mensagem de vitória.
         printf("Parabéns seu fudido, você ganhou!\n");
-        /*gettimeofday(&t1, NULL);
-        long s  = t1.tv_sec  - t0.tv_sec;
-        long us = t1.tv_usec - t0.tv_usec;
-        double tempo = s + us * 1e-6;
-        printf("Tempo: %.6f segundos\n", tempo);*/
         //liberaMatriz(matriz, TAM); // Preciso ver se a função de fato está liberando a matriz de maneira correta depois 
         return 1;
     }
     else{
         return 0;
     }
-}
-
-double tempo_decorrido(struct timeval inicio, struct timeval fim){ // Para calcular o tempo decorrido sempre que chamada.
-    long sec = fim.tv_sec - inicio.tv_sec;
-    long microsec = fim.tv_usec - inicio.tv_usec;
-    return sec + microsec * 1e-6;
 }
 
 void limpar_buffer(){ // Para limpar o buffer.
