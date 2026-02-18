@@ -1,3 +1,4 @@
+//GUILHERME AUGUSTO FIGUEIREDO GONÇALVES - 25.2.4151
 #include <stdio.h> // Para funções básicas, como printf e scanf.
 #include <stdlib.h> // Para alocar memória dinamicamente.
 #include <string.h> // Para manipulação de strings.
@@ -16,13 +17,19 @@
 #define RED(string)        ANSI_COLOR_RED        string ANSI_RESET
 #define GREEN(string)      ANSI_COLOR_GREEN      string ANSI_RESET
 
-
-
-typedef struct{ // Cria uma estrutura que será usada para cada posiçaõ da matriz.
+typedef struct{ // Cria uma estrutura que será usada para cada posição da matriz.
     int valor;
     int estadoP;
     int estadoU;
 } Numero;
+
+typedef struct{ // struct principal, mudar depois
+    char nome[MAX];
+    int tempo;
+    int TAM;
+    //Numero **matriz;
+} JogoSumplete;
+
 
 void novoJogo(); 
 void ajuda(int *ajuda); // Apresenta ao usuário suas opções de comandos.
@@ -50,6 +57,9 @@ int main(){ // Main, link menu/funções
             int ajudaMenu = 1;
             ajuda(&ajudaMenu);
         }
+        else if(strcmp(opcao, "sair") == 0){
+            return 0;
+        }
         else{
             printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
         }
@@ -59,9 +69,11 @@ int main(){ // Main, link menu/funções
 }   
 
 void novoJogo(){
-    Numero **matriz; int TAM, estadoPL = 0, estadoPD = 0; char opcao[MAX]; // Declaração de variáveis que vão ser usadas.
+    JogoSumplete jogo;
 
-    matriz = criaMatriz(matriz, &TAM, &estadoPL, &estadoPD); // Cria uma matriz e ela é adicionada a variável "matriz".
+    Numero **matriz; int estadoPL = 0, estadoPD = 0; char opcao[MAX]; // Declaração de variáveis que vão ser usadas.
+
+    matriz = criaMatriz(matriz, &jogo.TAM, &estadoPL, &estadoPD); // Cria uma matriz e ela é adicionada a variável "matriz".
 
     time_t inicioJogo, fimJogo;
     inicioJogo = time(NULL); // talvez eu devesse mudar isso de lugar depois
@@ -70,8 +82,8 @@ void novoJogo(){
     do{
                 
         int estadoUL = 0, estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
-        for(int i = 0; i < TAM+1; i++){ // Impressão da matriz na tela.
-            for(int j = 0; j < TAM+1; j++){ 
+        for(int i = 0; i < jogo.TAM+1; i++){ // Impressão da matriz na tela.
+            for(int j = 0; j < jogo.TAM+1; j++){ 
                 if(matriz[i][j].estadoU == 1){
                     printf(BOLD(GREEN("%d ")), matriz[i][j].valor); // Impressão do valor em cor verde (estado usuário ligado).
                     if(matriz[i][j].estadoU == matriz[i][j].estadoP){ 
@@ -84,9 +96,9 @@ void novoJogo(){
                         estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                     }
                 }
-                else if(j == TAM && i != TAM){ // Impressão das dicas da direita.
+                else if(j == jogo.TAM && i != jogo.TAM){ // Impressão das dicas da direita.
                     int somaL = 0;
-                    for(int k = 0; k < TAM; k++){ // Somatório dos números que não estão apagados.
+                    for(int k = 0; k < jogo.TAM; k++){ // Somatório dos números que não estão apagados.
                         if(matriz[i][k].estadoU != -1){
                             somaL = somaL + matriz[i][k].valor;
                         }
@@ -98,9 +110,9 @@ void novoJogo(){
                         printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                     }
                 }
-                else if(i == TAM && j != TAM){ // Impressão das dicas de baixo.
+                else if(i == jogo.TAM && j != jogo.TAM){ // Impressão das dicas de baixo.
                     int somaC = 0;
-                    for(int k = 0; k < TAM; k++){ // Somatório dos números que não estão apagados.
+                    for(int k = 0; k < jogo.TAM; k++){ // Somatório dos números que não estão apagados.
                         if(matriz[k][j].estadoU != -1){
                             somaC = somaC + matriz[k][j].valor;
                         }
@@ -112,7 +124,7 @@ void novoJogo(){
                         printf(DIM("%d "), matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                     }   
                 }
-                else if((i == TAM) && (j == TAM)){ // Apenas para não printar a posição TAM.TAM.
+                else if((i == jogo.TAM) && (j == jogo.TAM)){ // Apenas para não printar a posição TAM.TAM.
                 } 
                 else
                     printf(BOLD("%d "), matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
@@ -159,10 +171,10 @@ void novoJogo(){
                 remover(matriz, l, c);
             }
             else if(strcmp(opcao, "dica") == 0){
-                dica(matriz, &TAM);
+                dica(matriz, &jogo.TAM);
             }
             else if(strcmp(opcao, "resolver") == 0){
-                resolver(matriz, &TAM);
+                resolver(matriz, &jogo.TAM);
             }
             else if(strcmp(opcao, "salvar") == 0){ // Salva o jogo e recolhe o nome do arquivo de save.
                 char arqNome[MAX];
@@ -174,7 +186,7 @@ void novoJogo(){
                 ajuda(&ajudaJogo);
             }
             else{
-                printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: "); // Implementar ajuda auqi depois
+                printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: "); // Implementar ajuda aqui depois
             }
         } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
 
