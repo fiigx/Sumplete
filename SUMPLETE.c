@@ -1,4 +1,5 @@
 //GUILHERME AUGUSTO FIGUEIREDO GONÇALVES - 25.2.4151
+// Inclusão de bibliotecas:
 #include <stdio.h> // Para funções básicas, como printf e scanf.
 #include <stdlib.h> // Para alocar memória dinamicamente.
 #include <string.h> // Para manipulação de strings.
@@ -17,27 +18,28 @@
 #define RED(string)        ANSI_COLOR_RED        string ANSI_RESET
 #define GREEN(string)      ANSI_COLOR_GREEN      string ANSI_RESET
 
+// Estruturas para gestão do jogo:
 typedef struct{ // Cria uma estrutura que será usada para cada posição da matriz.
-    int valor;
+    int valor; 
     int estadoP;
     int estadoU;
 } Numero;
 
-typedef struct{ // struct principal, mudar depois
-    char nome[MAX];
-    int tempo;
-    int TAM; // Suspostamente feito, só falta mexer nas funções
+typedef struct{ // Struct principal, carrega informações importantes sobre o jogo no geral.
     Numero **matriz; 
+    char nome[MAX];
+    int TAM;
     int estadoPL;
     int estadoPD;
+    int tempo;
 } JogoSumplete;
 
-
+// Protótipos para as funções:
 void novoJogo(); 
 void ajuda(int *ajuda); // Apresenta ao usuário suas opções de comandos.
 int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz e imprimir na tela.
-void adicionar(Numero **matriz, int l, int c); // Adiciona um número como verdadeiro, estadoU = 1.
-void remover(Numero **matriz, int l, int c); // Adiciona um número como falso, estadoU = -1.
+void adicionar(Numero **matriz, int TAM); // Adiciona um número como verdadeiro, estadoU = 1.
+void remover(Numero **matriz, int TAM); // Adiciona um número como falso, estadoU = -1.
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
 void resolver(Numero **matriz, int *TAM); // Resolve o jogo.
 int verificaVitoria(int **matriz, int estadoUD, int estadoPD); // Verifica se as condições de vitória estão satisfeitas.
@@ -81,9 +83,7 @@ void novoJogo(){
     time_t inicioJogo, fimJogo;
     inicioJogo = time(NULL); // talvez eu devesse mudar isso de lugar depois
 
-
-    do{
-                
+    do{     
         int estadoUL = 0, estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
         for(int i = 0; i < jogo.TAM+1; i++){ // Impressão da matriz na tela.
             for(int j = 0; j < jogo.TAM+1; j++){ 
@@ -136,12 +136,10 @@ void novoJogo(){
         }
 
         if(verificaVitoria(jogo.matriz, estadoUD, jogo.estadoPD) == 1){
-            double tempoGasto;
             fimJogo = time(NULL);
+            jogo.tempo = difftime(fimJogo, inicioJogo); // Isso precisa estar em outro lugar depois
 
-            tempoGasto = difftime(fimJogo, inicioJogo);
-
-            printf("Tempo total: %.0f segundos\n", tempoGasto);
+            printf("Tempo total: %.0d segundos\n", jogo.tempo);
             return 0; // Programa sai, mas talvez eu queira mudar depois
         }
 
@@ -149,15 +147,11 @@ void novoJogo(){
         do{
             scanf("%s", opcao);
             
-            if(strcmp(opcao, "adicionar") == 0){ // Talvez mudar isso depois.
-                int l, c;
-                scanf("%d%d", &l, &c);
-                adicionar(jogo.matriz, l, c);
+            if(strcmp(opcao, "adicionar") == 0){ // // Adiciona um número como verdadeiro, estadoU = +1.
+                adicionar(jogo.matriz, jogo.TAM);
             }
-            else if(strcmp(opcao, "remover") == 0){ // Talvez mudar isso depois.
-                int l, c;
-                scanf("%d%d", &l, &c);
-                remover(jogo.matriz, l, c);
+            else if(strcmp(opcao, "remover") == 0){ // // Adiciona um número como falso, estadoU = -1.
+                remover(jogo.matriz, jogo.TAM);
             }
             else if(strcmp(opcao, "dica") == 0){
                 dica(jogo.matriz, &jogo.TAM);
@@ -234,11 +228,27 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     return matriz;
 }
 
-void adicionar(Numero **matriz, int l, int c){ // Adiciona um número como verdadeiro, estadoU = 1.          
+void adicionar(Numero **matriz, int TAM){ // Adiciona um número como verdadeiro, estadoU = 1.     
+    int l, c; 
+    do{
+        scanf("%d%d", &l, &c);
+        limpar_buffer(); // Limpa o buffer para não cair em loop.
+        if(((l <= 0) || (l >= TAM+1)) || ((c <= 0) || (c >= TAM+1))){
+            printf("Selecione uma posição válida, \"i\" e \"j\" aceitam valores de 1 a %d: ", TAM);
+        }
+    } while(((l <= 0) || (l >= TAM+1)) || ((c <= 0) || (c >= TAM+1)));     
     matriz[l-1][c-1].estadoU = 1;
 }
 
-void remover(Numero **matriz, int l, int c){ // Adiciona um número como falso, estadoU = -1.
+void remover(Numero **matriz, int TAM){ // Adiciona um número como falso, estadoU = -1.
+    int l, c; 
+    do{
+        scanf("%d%d", &l, &c);
+        limpar_buffer(); // Limpa o buffer para não cair em loop.
+        if(((l <= 0) || (l >= TAM+1)) || ((c <= 0) || (c >= TAM+1))){
+            printf("Selecione uma posição válida, \"i\" e \"j\" aceitam valores de 1 a %d: ", TAM);
+        }
+    } while(((l <= 0) || (l >= TAM+1)) || ((c <= 0) || (c >= TAM+1)));  
     matriz[l-1][c-1].estadoU = -1;
 }
 
@@ -281,7 +291,7 @@ void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
         *ajuda == 0;
     }
     else if(*ajuda == 2){
-        printf("Comandos disponíveis:\n - (adicionar \"x\" \"y\"): seleciona um número para adicionar\n - (remover \"x\" \"y\"): seleciona um número para remover\n - (dica): retira um número falso\n - (resolver): resolve o puzzle\n"); // Por todos os comandos aqui depois
+        printf("\nComandos disponíveis:\n - (adicionar \"i\" \"j\"): seleciona um número para adicionar\n - (remover \"i\" \"j\"): seleciona um número para remover\n - (dica): retira um número falso\n - (resolver): resolve o puzzle\n\n"); // Por todos os comandos aqui depois
         *ajuda = 0;
     }
 }
