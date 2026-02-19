@@ -32,7 +32,7 @@ typedef struct{ // Struct principal, carrega informações importantes sobre cad
     int estadoPL; // Somatório dos números definidos pelo programa que estão ligados.
     int estadoUL; // Somatório dos números definidos pelo usuário que estão ligados.
     int estadoPD; // Somatório dos números definidos pelo programa que estão desligados.
-    int *estadoUD; // Somatório dos números definidos pelo usuário que estão desligados.
+    int estadoUD; // Somatório dos números definidos pelo usuário que estão desligados.
     int tempo; // Tempo de cada jogo.
 } JogoSumplete;
 
@@ -53,7 +53,7 @@ int main(){ // Main, link menu/funções
     setlocale(LC_ALL, "Portuguese"); // Para acentuações brasileiras funcionarem 
 
     char opcao[MAX];
-    printf("Bem vindo ao Jogo SUMPLETE:\n\nComandos do jogo:\n- (sair)\n- (novo)\n- (ajuda)\nSelecione um dos comandos anteriores escrevendo-o a seguir: ");
+    printf("Bem vindo ao Jogo SUMPLETE:\n\nComandos do jogo:\n-[ajuda]-\n-[sair]-\n-[novo]-\n-[carregar]-\n-[ranking]-\nSelecione um dos comandos anteriores escrevendo-o a seguir: ");
     do{
         scanf("%s", opcao);
         limpar_buffer();
@@ -67,6 +67,12 @@ int main(){ // Main, link menu/funções
         else if(strcmp(opcao, "sair") == 0){
             return 0;
         }
+        else if(strcmp(opcao, "carregar") == 0){
+            //função para carregar um save
+        }
+        else if(strcmp(opcao, "ranking") == 0){
+            //função para mostrar o ranking
+        }
         else{
             printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
         }
@@ -78,7 +84,7 @@ int main(){ // Main, link menu/funções
 void novoJogo(){
     JogoSumplete jogo;
 
-    jogo.estadoPL = 0; jogo.estadoPD = 0;
+    jogo.estadoPL = 0; jogo.estadoPD = 0;  
     char opcao[MAX]; // Para selecionar opção.
 
     jogo.matriz = criaMatriz(jogo.matriz, &jogo.TAM, &jogo.estadoPL, &jogo.estadoPD); // Cria uma matriz e ela é adicionada a variável "matriz".
@@ -183,7 +189,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
 }
 
 void imprimeMatriz(JogoSumplete jogo){ // Toda essa parte serve para imprimir a matriz na tela, validando os estados de ligado ou desligado dos números e realizando a contagem das dicas:
-    jogo.estadoUL = 0; *jogo.estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
+    jogo.estadoUL = 0; jogo.estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
     for(int i = 0; i < jogo.TAM+1; i++){ // Impressão da matriz na tela.
         for(int j = 0; j < jogo.TAM+1; j++){ 
             if(jogo.matriz[i][j].estadoU == 1){
@@ -195,7 +201,7 @@ void imprimeMatriz(JogoSumplete jogo){ // Toda essa parte serve para imprimir a 
             else if(jogo.matriz[i][j].estadoU == -1){
                 printf(BOLD(RED("%d ")), jogo.matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
                 if(jogo.matriz[i][j].estadoU == jogo.matriz[i][j].estadoP){
-                    *jogo.estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
+                    jogo.estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                 }
             }
             else if(j == jogo.TAM && i != jogo.TAM){ // Impressão das dicas da direita.
@@ -293,12 +299,12 @@ void liberaMatriz(Numero **matriz, int *TAM){ // Preciso verificar se está cert
 }
 
 void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
-    if(*ajuda == 1){
-        printf("\nComandos disponíveis: \nComo jogar:\nObjetivo:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\nComo jogar:\n-Cada célula pode: manter ou remover o n�mero.\n-Números removidos não contam na soma.\n-Você decide quais números apagar até todas as somas baterem.\n\nVitória:\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.");
+    if(*ajuda == 1){ // Comandos dentro do menu.
+        printf("\nComandos disponíveis no menu:\n-[novo]: Começar um novo jogo;\n-[carregar]: Carregar um jogo salvo em arquivo;\n-[ranking]: Exibir o ranking;\n\nComo jogar:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\n- Cada célula pode: manter ou remover o número.\n- Números removidos não contam na soma.\n- Você decide quais números apagar até todas as somas baterem.\n\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.\n\nDigite um dos comandos anteriores: ");
         *ajuda == 0;
     }
-    else if(*ajuda == 2){
-        printf("\nComandos disponíveis:\n - (adicionar \"i\" \"j\"): seleciona um número para adicionar\n - (remover \"i\" \"j\"): seleciona um número para remover\n - (dica): retira um número falso\n - (resolver): resolve o puzzle\n\n"); // Por todos os comandos aqui depois
+    else if(*ajuda == 2){ // Comandos dentro dp jogo.
+        printf("\nComandos disponíveis:\n - [adicionar \"i\" \"j\"]: seleciona um número para adicionar\n - [remover \"i\" \"j\"]: seleciona um número para remover\n - (dica): retira um número falso\n - (resolver): resolve o puzzle\n\n"); // Por todos os comandos aqui depois
         *ajuda = 0;
     }
 }
