@@ -53,7 +53,7 @@ int main(){ // Main, link menu/funções
     setlocale(LC_ALL, "Portuguese"); // Para acentuações brasileiras funcionarem 
 
     char opcao[MAX];
-    printf("Bem vindo ao Jogo SUMPLETE:\n\nComandos do jogo:\n-[ajuda]-\n-[sair]-\n-[novo]-\n-[carregar]-\n-[ranking]-\nSelecione um dos comandos anteriores escrevendo-o a seguir: ");
+    printf("Bem vindo ao Jogo SUMPLETE:\n\nComandos do jogo:\n-[novo]-\n-[carregar]-\n-[ranking]-\n-[ajuda]-\n-[sair]-\n\nSelecione um dos comandos anteriores escrevendo-o a seguir: ");
     do{
         scanf("%s", opcao);
         limpar_buffer();
@@ -128,10 +128,14 @@ void novoJogo(){
                 int ajudaJogo = 2;
                 ajuda(&ajudaJogo);
             }
+            else if(strcmp(opcao, "sair") == 0){ // Sai do jogo atual e pergunta o usuário se ele quer salvar, mexer aqui depois
+                // Implementar as funções de salvar aqui tb depois
+                return 0;
+            }
             else{
                 printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: "); // Implementar ajuda aqui depois
             }
-        } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
+        } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0) && (strcmp(opcao, "sair") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
 
     } while(strcmp(opcao, "sair") != 0);
 }
@@ -300,11 +304,11 @@ void liberaMatriz(Numero **matriz, int *TAM){ // Preciso verificar se está cert
 
 void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
     if(*ajuda == 1){ // Comandos dentro do menu.
-        printf("\nComandos disponíveis no menu:\n-[novo]: Começar um novo jogo;\n-[carregar]: Carregar um jogo salvo em arquivo;\n-[ranking]: Exibir o ranking;\n\nComo jogar:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\n- Cada célula pode: manter ou remover o número.\n- Números removidos não contam na soma.\n- Você decide quais números apagar até todas as somas baterem.\n\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.\n\nDigite um dos comandos anteriores: ");
+        printf("\nComo jogar:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\n- Cada célula pode: manter ou remover o número.\n- Números removidos não contam na soma.\n- Você decide quais números apagar até todas as somas baterem.\n\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.\n\nComandos disponíveis no menu:\n-[novo]: Começar um novo jogo;\n-[carregar]: Carregar um jogo salvo em arquivo;\n-[ranking]: Exibir o ranking;\n-[sair]: Sair do jogo.\n\nDigite um dos comandos anteriores: ");
         *ajuda == 0;
     }
     else if(*ajuda == 2){ // Comandos dentro dp jogo.
-        printf("\nComandos disponíveis:\n - [adicionar \"i\" \"j\"]: seleciona um número para adicionar\n - [remover \"i\" \"j\"]: seleciona um número para remover\n - (dica): retira um número falso\n - (resolver): resolve o puzzle\n\n"); // Por todos os comandos aqui depois
+        printf("\nComandos disponíveis:\n - [adicionar \"i\" \"j\"]: seleciona um número para adicionar;\n - [remover \"i\" \"j\"]: seleciona um número para remover;\n - [dica]: retira um número falso;\n - [resolver]: resolve o puzzle;\n - [salvar]: salva o jogo atual.\n\nSeu tabuleiro atual:\n"); // Por todos os comandos aqui depois
         *ajuda = 0;
     }
 }
