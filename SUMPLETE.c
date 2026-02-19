@@ -39,13 +39,13 @@ typedef struct{ // Struct principal, carrega informações importantes sobre cad
 // Protótipos para as funções:
 void novoJogo(); 
 void ajuda(int *ajuda); // Apresenta ao usuário suas opções de comandos.
-int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD); // Função responsável por criar uma matriz.
-void imprimeMatriz(JogoSumplete jogo); // Impressão da matriz na tela.
+int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[MAX]); // Função responsável por criar uma matriz.
+void imprimeMatriz(JogoSumplete *jogo); // Impressão da matriz na tela.
 void adicionar(Numero **matriz, int TAM); // Adiciona um número como verdadeiro, estadoU = 1.
 void remover(Numero **matriz, int TAM); // Adiciona um número como falso, estadoU = -1.
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
 void resolver(Numero **matriz, int *TAM); // Resolve o jogo.
-int verificaVitoria(JogoSumplete jogo); // Verifica se as condições de vitória estão satisfeitas.
+int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo, time_t fimJogo); // Verifica se as condições de vitória estão satisfeitas.
 void liberaMatriz(Numero **matriz, int *TAM); // Libera a memória alocada para a matriz.
 void limpar_buffer(); // Limpa o buffer.
 
@@ -68,10 +68,10 @@ int main(){ // Main, link menu/funções
             return 0;
         }
         else if(strcmp(opcao, "carregar") == 0){
-            //função para carregar um save
+            //função para carregar um save, mexer aqui depois
         }
         else if(strcmp(opcao, "ranking") == 0){
-            //função para mostrar o ranking
+            //função para mostrar o ranking, mexer aqui depois
         }
         else{
             printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
@@ -84,26 +84,22 @@ int main(){ // Main, link menu/funções
 void novoJogo(){
     JogoSumplete jogo;
 
-    jogo.estadoPL = 0; jogo.estadoPD = 0;  
+    jogo.estadoPL = 0; jogo.estadoPD = 0; 
     char opcao[MAX]; // Para selecionar opção.
 
-    jogo.matriz = criaMatriz(jogo.matriz, &jogo.TAM, &jogo.estadoPL, &jogo.estadoPD); // Cria uma matriz e ela é adicionada a variável "matriz".
+    jogo.matriz = criaMatriz(jogo.matriz, &jogo.TAM, &jogo.estadoPL, &jogo.estadoPD, jogo.nome); // Cria uma matriz e ela é adicionada a variável "matriz".
 
     time_t inicioJogo, fimJogo;
     inicioJogo = time(NULL); // talvez eu devesse mudar isso de lugar depois
 
     do{ 
-        imprimeMatriz(jogo); // Printa todo o tabuleiro colorido na tela 
+        imprimeMatriz(&jogo); // Printa todo o tabuleiro colorido na tela.
 
-        if(verificaVitoria(jogo) == 1){
-            fimJogo = time(NULL);
-            jogo.tempo = difftime(fimJogo, inicioJogo); // Isso precisa estar em outro lugar depois
-            printf("Tempo total: %.0d segundos\n", jogo.tempo);
-
+        if(verificaVitoria(&jogo, inicioJogo, fimJogo) == 1){
             return 0; // Programa sai, mas talvez eu queira mudar depois
         }
 
-        printf("nome aqui, digite um comando: "); // Seleção de comando.
+        printf("%s, digite um comando: ", jogo.nome); // Seleção de comando.
         do{
             scanf("%s", opcao);
             
@@ -140,14 +136,14 @@ void novoJogo(){
     } while(strcmp(opcao, "sair") != 0);
 }
 
-int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
+int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[MAX]){
     srand(time(NULL));
-    char dificuldade, nome[MAX];
+    char dificuldade;
 
     printf("Você iniciu um novo jogo, digite seu nome para continuar: ");
-    fgets(nome, MAX, stdin);
+    scanf("%s", nome);
 
-    printf("Selecione a dificuldade do jogo:\n- (f) nível fácil, tamanho 3x3.\n- (m) nével médio, tamanho 5x5.\n- (d) nível difícil, tamanho 7x7.\n");
+    printf("Selecione a dificuldade do jogo:\n- [f]: nível fácil, tamanho 3x3;\n- [m]: nével médio, tamanho 5x5;\n- [d]: nível difícil, tamanho 7x7.\n");
     do{ // Seleção de dificuldade e mudança de tamanho da matriz.
         scanf(" %c", &dificuldade);
         limpar_buffer();
@@ -159,8 +155,7 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
             *TAM = 7;
         else
             printf("DIGITE UMA DIFICULDADE VÁLIDA: ");
-    }
-    while((dificuldade != 'f') && (dificuldade != 'm') && (dificuldade != 'd')); // Loop até digitar uma dificuldade válida.
+    } while((dificuldade != 'f') && (dificuldade != 'm') && (dificuldade != 'd')); // Loop até digitar uma dificuldade válida.
 
     matriz = malloc((*TAM+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz        
     for(int i = 0; i < *TAM+1; i++){ 
@@ -191,55 +186,58 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD){
     }
     return matriz;
 }
+//
 
-void imprimeMatriz(JogoSumplete jogo){ // Toda essa parte serve para imprimir a matriz na tela, validando os estados de ligado ou desligado dos números e realizando a contagem das dicas:
-    jogo.estadoUL = 0; jogo.estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
-    for(int i = 0; i < jogo.TAM+1; i++){ // Impressão da matriz na tela.
-        for(int j = 0; j < jogo.TAM+1; j++){ 
-            if(jogo.matriz[i][j].estadoU == 1){
-                printf(BOLD(GREEN("%d ")), jogo.matriz[i][j].valor); // Impressão do valor em cor verde (estado usuário ligado).
-                if(jogo.matriz[i][j].estadoU == jogo.matriz[i][j].estadoP){ 
-                    jogo.estadoUL++; // Acrescenta mais um no contador do estado usário ligado.
+
+
+void imprimeMatriz(JogoSumplete *jogo){ // Toda essa parte serve para imprimir a matriz na tela, validando os estados de ligado ou desligado dos números e realizando a contagem das dicas:
+    (*jogo).estadoUL = 0; (*jogo).estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
+    for(int i = 0; i < (*jogo).TAM+1; i++){ // Impressão da matriz na tela.
+        for(int j = 0; j < (*jogo).TAM+1; j++){ 
+            if((*jogo).matriz[i][j].estadoU == 1){
+                printf(BOLD(GREEN("%d ")), (*jogo).matriz[i][j].valor); // Impressão do valor em cor verde (estado usuário ligado).
+                if((*jogo).matriz[i][j].estadoU == (*jogo).matriz[i][j].estadoP){ 
+                    (*jogo).estadoUL++; // Acrescenta mais um no contador do estado usário ligado.
                 }
             }
-            else if(jogo.matriz[i][j].estadoU == -1){
-                printf(BOLD(RED("%d ")), jogo.matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
-                if(jogo.matriz[i][j].estadoU == jogo.matriz[i][j].estadoP){
-                    jogo.estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
+            else if((*jogo).matriz[i][j].estadoU == -1){
+                printf(BOLD(RED("%d ")), (*jogo).matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
+                if((*jogo).matriz[i][j].estadoU == (*jogo).matriz[i][j].estadoP){
+                    (*jogo).estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                 }
             }
-            else if(j == jogo.TAM && i != jogo.TAM){ // Impressão das dicas da direita.
+            else if(j == (*jogo).TAM && i != (*jogo).TAM){ // Impressão das dicas da direita.
                 int somaL = 0;
-                for(int k = 0; k < jogo.TAM; k++){ // Somatório dos números que não estão apagados.
-                    if(jogo.matriz[i][k].estadoU != -1){
-                        somaL = somaL + jogo.matriz[i][k].valor;
+                for(int k = 0; k < (*jogo).TAM; k++){ // Somatório dos números que não estão apagados.
+                    if((*jogo).matriz[i][k].estadoU != -1){
+                        somaL = somaL + (*jogo).matriz[i][k].valor;
                     }
                 }
-                if(somaL == jogo.matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
-                    printf(BOLD("%d "), jogo.matriz[i][j].valor);
+                if(somaL == (*jogo).matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
+                    printf(BOLD("%d "), (*jogo).matriz[i][j].valor);
                 }
                 else{
-                    printf(DIM("%d "), jogo.matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                    printf(DIM("%d "), (*jogo).matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                 }
             }
-            else if(i == jogo.TAM && j != jogo.TAM){ // Impressão das dicas de baixo.
+            else if(i == (*jogo).TAM && j != (*jogo).TAM){ // Impressão das dicas de baixo.
                 int somaC = 0;
-                for(int k = 0; k < jogo.TAM; k++){ // Somatório dos números que não estão apagados.
-                    if(jogo.matriz[k][j].estadoU != -1){
-                        somaC = somaC + jogo.matriz[k][j].valor;
+                for(int k = 0; k < (*jogo).TAM; k++){ // Somatório dos números que não estão apagados.
+                    if((*jogo).matriz[k][j].estadoU != -1){
+                        somaC = somaC + (*jogo).matriz[k][j].valor;
                     }
                 }
-                if(somaC == jogo.matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
-                    printf(BOLD("%d "), jogo.matriz[i][j].valor);
+                if(somaC == (*jogo).matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
+                    printf(BOLD("%d "), (*jogo).matriz[i][j].valor);
                 }
                 else{
-                    printf(DIM("%d "), jogo.matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                    printf(DIM("%d "), (*jogo).matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                 }   
             }
-            else if((i == jogo.TAM) && (j == jogo.TAM)){ // Apenas para não printar a posição TAM.TAM.
+            else if((i == (*jogo).TAM) && (j == (*jogo).TAM)){ // Apenas para não printar a posição TAM.TAM.
             } 
             else
-                printf(BOLD("%d "), jogo.matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
+                printf(BOLD("%d "), (*jogo).matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
         } 
         printf("\n"); 
     }
@@ -313,9 +311,12 @@ void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
     }
 }
 
-int verificaVitoria(JogoSumplete jogo){
-    if(jogo.estadoUD == jogo.estadoPD){ // Verifica a condição de vitória e printa uma mensagem de vitória.
+int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo, time_t fimJogo){
+    if((*jogo).estadoUD == (*jogo).estadoPD){ // Verifica a condição de vitória e printa uma mensagem de vitória.
         printf("Parabéns seu fudido, você ganhou!\n");
+        fimJogo = time(NULL);
+        (*jogo).tempo = difftime(fimJogo, inicioJogo); // Isso precisa estar em outro lugar depois
+        printf("Tempo total: %.0d segundos\n", (*jogo).tempo);
         //liberaMatriz(matriz, TAM); // Preciso ver se a função de fato está liberando a matriz de maneira correta depois 
         return 1;
     }
