@@ -39,7 +39,7 @@ typedef struct{ // Struct principal, carrega informações importantes sobre cad
 // Protótipos para as funções:
 void jogar(); 
 void ajuda(int *ajuda); // Apresenta ao usuário suas opções de comandos.
-int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[MAX]); // Função responsável por criar uma matriz.
+Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[MAX]); // Função responsável por criar uma matriz.
 void imprimeMatriz(JogoSumplete *jogo); // Impressão da matriz na tela.
 void adicionar(Numero **matriz, int TAM); // Adiciona um número como verdadeiro, estadoU = 1.
 void remover(Numero **matriz, int TAM); // Adiciona um número como falso, estadoU = -1.
@@ -126,17 +126,18 @@ void jogar(){
             }
             else if(strcmp(opcao, "sair") == 0){ // Sai do jogo atual e pergunta o usuário se ele quer salvar, mexer aqui depois
                 // Implementar as funções de salvar aqui tb depois
+                liberaMatriz(&jogo);
                 return;
             }
             else{
-                printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: "); // Implementar ajuda aqui depois
+                printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
             }
-        } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0) && (strcmp(opcao, "sair") != 0)); // Verificar se todas as condições estão aqui antes de entregar, depois
+        } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0) && (strcmp(opcao, "sair") != 0)); 
 
     } while(strcmp(opcao, "sair") != 0);
 }
 
-int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[MAX]){
+Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[MAX]){
     srand(time(NULL));
     char dificuldade;
 
@@ -169,9 +170,10 @@ int criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nom
         matriz[i][*TAM].valor = 0; matriz[i][*TAM].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
     
-    for(int i = 0; i < *TAM; i++){ // Estrutura de repetição para preencher a matriz e as dicas. comentar melhor depois
+    for(int i = 0; i < *TAM; i++){
         for(int j = 0; j < *TAM; j++){
             matriz[i][j].valor = (rand() % 9) + 1;
+            matriz[i][j].estadoU = 0; // Atribui o estadoU neutro para todos os números da matriz, evita uso de lixo de memória.
             matriz[i][j].estadoP = -1;
             if((rand() % 2) == 0){ // Validação do número e somatório das dicas. comentar melhor depois
                 matriz[i][*TAM].valor = matriz[i][*TAM].valor + matriz[i][j].valor;
@@ -266,7 +268,7 @@ void remover(Numero **matriz, int TAM){ // Adiciona um número como falso, estad
 
 void dica(Numero **matriz, int *TAM){
     int validador = 0;
-    for(int i = 0; i < *TAM && validador == 0; i++){ // A dica está seguindo a órdem da matriz, seria bom colocar uma órdem aleátoria depois
+    for(int i = 0; i < *TAM && validador == 0; i++){
         for(int j = 0; j < *TAM; j++){
             if(matriz[i][j].estadoU != -1 && matriz[i][j].estadoP == -1){
                 matriz[i][j].estadoU = -1;
@@ -301,8 +303,8 @@ void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
     if(*ajuda == 1){ // Comandos dentro do menu.
         printf("\nComo jogar:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\n- Cada célula pode: manter ou remover o número.\n- Números removidos não contam na soma.\n- Você decide quais números apagar até todas as somas baterem.\n\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.\n\nComandos disponíveis no menu:\n-[novo]: Começar um novo jogo;\n-[carregar]: Carregar um jogo salvo em arquivo;\n-[ranking]: Exibir o ranking;\n-[sair]: Sair do jogo.\n\nDigite um dos comandos anteriores: ");
     }
-    else if(*ajuda == 2){ // Comandos dentro dp jogo.
-        printf("\nComandos disponíveis:\n - [adicionar \"i\" \"j\"]: seleciona um número para adicionar;\n - [remover \"i\" \"j\"]: seleciona um número para remover;\n - [dica]: retira um número falso;\n - [resolver]: resolve o puzzle;\n - [salvar]: salva o jogo atual.\n\nSeu tabuleiro atual:\n"); // Por todos os comandos aqui depois
+    else if(*ajuda == 2){ // Comandos dentro do jogo.
+        printf("\nComandos disponíveis:\n - [adicionar \"i\" \"j\"]: seleciona um número para adicionar;\n - [remover \"i\" \"j\"]: seleciona um número para remover;\n - [dica]: retira um número falso;\n - [resolver]: resolve o puzzle;\n - [salvar]: salva o jogo atual.\n\nSeu tabuleiro atual:\n");
     }
 }
 
@@ -310,7 +312,7 @@ int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo){
     if((*jogo).estadoUD == (*jogo).estadoPD){ // Verifica a condição de vitória e printa uma mensagem de vitória.
         printf("Parabéns seu fudido, você ganhou!\n");
         time_t fimJogo = time(NULL);
-        (*jogo).tempo = difftime(fimJogo, inicioJogo); // Isso precisa estar em outro lugar depois
+        (*jogo).tempo = difftime(fimJogo, inicioJogo);
         printf("Tempo total: %.0d segundos\n", (*jogo).tempo);
         liberaMatriz(jogo); // Preciso ver se a função de fato está liberando a matriz de maneira correta depois 
         return 1;
