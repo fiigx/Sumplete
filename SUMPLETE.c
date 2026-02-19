@@ -96,7 +96,7 @@ void jogar(){
         imprimeMatriz(&jogo); // Printa todo o tabuleiro colorido na tela.
 
         if(verificaVitoria(&jogo, inicioJogo) == 1){
-            return; // Programa sai, mas talvez eu queira mudar depois
+            return;
         }
 
         printf("%s, digite um comando: ", jogo.nome); // Seleção de comando.
@@ -167,7 +167,7 @@ Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, cha
         matriz[*TAM][i].valor = 0; matriz[*TAM][i].estadoP = 0; matriz[*TAM][i].estadoU = 0;
     }
     for(int i = 0; i < *TAM+1; i++){ // Zera e atribui o estadoP/estadoU nulo (0) para a última linha da matriz (soma).
-        matriz[i][*TAM].valor = 0; matriz[i][*TAM].estadoP = 0; matriz[*TAM][i].estadoU = 0;
+        matriz[i][*TAM].valor = 0; matriz[i][*TAM].estadoP = 0; matriz[i][*TAM].estadoU = 0;
     }
     
     for(int i = 0; i < *TAM; i++){
@@ -175,7 +175,7 @@ Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, cha
             matriz[i][j].valor = (rand() % 9) + 1;
             matriz[i][j].estadoU = 0; // Atribui o estadoU neutro para todos os números da matriz, evita uso de lixo de memória.
             matriz[i][j].estadoP = -1;
-            if((rand() % 2) == 0){ // Validação do número e somatório das dicas. comentar melhor depois
+            if((rand() % 2) == 0){ // Validação do número e somatório das dicas. 
                 matriz[i][*TAM].valor = matriz[i][*TAM].valor + matriz[i][j].valor;
                 matriz[*TAM][j].valor = matriz[*TAM][j].valor + matriz[i][j].valor;
                 matriz[i][j].estadoP = 1;
@@ -292,7 +292,7 @@ void resolver(Numero **matriz, int *TAM){ // Resolve o jogo.
     }
 }   
 
-void liberaMatriz(JogoSumplete *jogo){ // Preciso verificar se está certo depois
+void liberaMatriz(JogoSumplete *jogo){ // Libera a memória alocada dinaminamente.
     for(int i = 0; i < ((*jogo).TAM)+1; i++){
         free((*jogo).matriz[i]);
     }
@@ -314,7 +314,7 @@ int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo){
         time_t fimJogo = time(NULL);
         (*jogo).tempo = difftime(fimJogo, inicioJogo);
         printf("Tempo total: %.0d segundos\n", (*jogo).tempo);
-        liberaMatriz(jogo); // Preciso ver se a função de fato está liberando a matriz de maneira correta depois 
+        liberaMatriz(jogo); // Libera a memória alocada dinamicamente.
         return 1;
     }
     else{
