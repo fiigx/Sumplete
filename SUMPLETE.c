@@ -189,18 +189,34 @@ Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, cha
     return matriz;
 }
 
-void imprimeMatriz(JogoSumplete *jogo){ // Toda essa parte serve para imprimir a matriz na tela, validando os estados de ligado ou desligado dos números e realizando a contagem das dicas:
+// Toda essa parte serve para imprimir a matriz na tela, validando os estados de ligado ou desligado dos números e realizando a contagem das dicas:
+void imprimeMatriz(JogoSumplete *jogo){ // Talvez procurar deixar mais bonito se sobrar tempo.
     (*jogo).estadoUL = 0; (*jogo).estadoUD = 0; // Zera o contador do estado usuário ligado e do estado usuário desligado toda vez.
+    
+    printf("   "); // Espaço para alinhar.
+    for(int c = 1; c <= (*jogo).TAM; c++){ // Impressão dos números das colunas.
+        printf(BOLD("%2d "), c);
+    }
+    printf("\n");
+
     for(int i = 0; i < (*jogo).TAM+1; i++){ // Impressão da matriz na tela.
+        
+        if(i < (*jogo).TAM){
+            printf(BOLD("%2d "), i + 1); // Impreme o número das linhas.
+        } 
+        else {
+            printf("   "); // Espaço na linha das dicas.
+        }
+
         for(int j = 0; j < (*jogo).TAM+1; j++){ 
             if((*jogo).matriz[i][j].estadoU == 1){
-                printf(BOLD(GREEN("%d ")), (*jogo).matriz[i][j].valor); // Impressão do valor em cor verde (estado usuário ligado).
+                printf(BOLD(GREEN("%2d ")), (*jogo).matriz[i][j].valor); // Impressão do valor em cor verde (estado usuário ligado).
                 if((*jogo).matriz[i][j].estadoU == (*jogo).matriz[i][j].estadoP){ 
                     (*jogo).estadoUL++; // Acrescenta mais um no contador do estado usário ligado.
                 }
             }
             else if((*jogo).matriz[i][j].estadoU == -1){
-                printf(BOLD(RED("%d ")), (*jogo).matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
+                printf(BOLD(RED("%2d ")), (*jogo).matriz[i][j].valor); // Impressão do valor em cor vermelha (estado usuário desligado).
                 if((*jogo).matriz[i][j].estadoU == (*jogo).matriz[i][j].estadoP){
                     (*jogo).estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
                 }
@@ -213,10 +229,10 @@ void imprimeMatriz(JogoSumplete *jogo){ // Toda essa parte serve para imprimir a
                     }
                 }
                 if(somaL == (*jogo).matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
-                    printf(BOLD("%d "), (*jogo).matriz[i][j].valor);
+                    printf(BOLD("%2d "), (*jogo).matriz[i][j].valor);
                 }
                 else{
-                    printf(DIM("%d "), (*jogo).matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                    printf(DIM("%2d "), (*jogo).matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                 }
             }
             else if(i == (*jogo).TAM && j != (*jogo).TAM){ // Impressão das dicas de baixo.
@@ -227,16 +243,16 @@ void imprimeMatriz(JogoSumplete *jogo){ // Toda essa parte serve para imprimir a
                     }
                 }
                 if(somaC == (*jogo).matriz[i][j].valor){ // Validação da dica e impressão dela em negrito.
-                    printf(BOLD("%d "), (*jogo).matriz[i][j].valor);
+                    printf(BOLD("%2d "), (*jogo).matriz[i][j].valor);
                 }
                 else{
-                    printf(DIM("%d "), (*jogo).matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
+                    printf(DIM("%2d "), (*jogo).matriz[i][j].valor); // Impressão das dicas com baixa opacidade.
                 }   
             }
             else if((i == (*jogo).TAM) && (j == (*jogo).TAM)){ // Apenas para não printar a posição TAM.TAM.
             } 
             else
-                printf(BOLD("%d "), (*jogo).matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
+                printf(BOLD("%2d "), (*jogo).matriz[i][j].valor); // Impressão em negrito (estado usuário nulo).
         } 
         printf("\n"); 
     }
