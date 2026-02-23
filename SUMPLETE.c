@@ -44,6 +44,7 @@ Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, cha
 void imprimeMatriz(JogoSumplete *jogo); // Impressão da matriz na tela.
 void adicionar(Numero **matriz, int TAM); // Adiciona um número como verdadeiro, estadoU = 1.
 void salvarJogo(JogoSumplete jogo, time_t inicioJogo); // Salva o progresso do jogador.
+void exibirRanking(); // Acessa o arquivo de ranking.
 JogoSumplete carregarJogo(); // Puxa o progresso de um jogo através de um arquivo.
 void remover(Numero **matriz, int TAM); // Adiciona um número como falso, estadoU = -1.
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
@@ -73,8 +74,8 @@ int main(){ // Main, link menu/funções
         else if(strcmp(opcao, "carregar") == 0){ // Carrega um save através de um arquivo.
             jogar(2);
         }
-        else if(strcmp(opcao, "ranking") == 0){
-            //função para mostrar o ranking, mexer aqui depois
+        else if(strcmp(opcao, "ranking") == 0){ // Mostra o ranking para o jogador 
+            exibirRanking();
         }
         else{
             printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
@@ -151,6 +152,7 @@ void jogar(int novoOuCarregar){ // Onde o jogo vai rodar.
             }
             else{
                 printf("Você selecionou uma opção inválida, escreva \"ajuda\" para acessar os comandos disponíveis: ");
+                limpar_buffer(); // Para mensagem de erro não repetir.
             }
         } while((strcmp(opcao, "adicionar") != 0) && (strcmp(opcao, "remover") != 0) && (strcmp(opcao, "dica") != 0) && (strcmp(opcao, "resolver") != 0) && (strcmp(opcao, "salvar") != 0) && (strcmp(opcao, "ajuda") != 0) && (strcmp(opcao, "sair") != 0)); 
 
@@ -164,7 +166,7 @@ Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, cha
     printf("Você iniciu um novo jogo, digite seu nome para continuar: ");
     scanf("%s", nome);
 
-    printf("Selecione a dificuldade do jogo:\n- [f]: nível fácil, tamanho 3x3;\n- [m]: nével médio, tamanho 5x5;\n- [d]: nível difícil, tamanho 7x7.\n");
+    printf("Selecione a dificuldade do jogo:\n- [f]: nível fácil, tamanho 3x3;\n- [m]: nível médio, tamanho 5x5;\n- [d]: nível difícil, tamanho 7x7.\n");
     do{ // Seleção de dificuldade e mudança de tamanho da matriz.
         scanf(" %c", &dificuldade);
         limpar_buffer();
@@ -356,7 +358,7 @@ void salvarJogo(JogoSumplete jogo, time_t inicioJogo){
         fprintf(save, "%d ", jogo.matriz[jogo.TAM][i].valor);
     }
     fprintf(save, "\n");
-    fprintf(save, "%d\n", jogo.estadoPD - jogo.estadoUD); // Printa quantas números faltam para o usuário ganhar.
+    fprintf(save, "%d\n", jogo.estadoPD); // Printa quantas números no total estão desligados.
     for(int i = 0; i < jogo.TAM; i++){ // Printa as posições dos numeros que o usuário ainda precisa remover pra vencer.
         for(int j = 0; j < jogo.TAM; j++){
             if(jogo.matriz[i][j].estadoP == -1){
@@ -419,24 +421,16 @@ JogoSumplete carregarJogo(){ // Puxa o progresso de um jogo através de um arqui
         fscanf(load, "%d", &jogo.matriz[jogo.TAM][i].valor); 
     }
     
-    int lixo;
-    fscanf(load, "%d", &lixo); // (estadoPD - estadoUD) está dando errado, precisei tirar ele e jogar fora.
+    int falsos; // Se trata dos números falsos
+    fscanf(load, "%d", &falsos); 
     
-    char linha[100];
-    fgets(linha, sizeof(linha), load); // Consome a quebra de linha ('\n') que sobrou do fscanf anterior.
-    
-    while(fgets(linha, sizeof(linha), load) != NULL){ // Continua a leitura até dar erro, lendo linha por linha.
+    for(int i = 0; i < falsos; i++){
         int l, c;
-        int lidos = sscanf(linha, "%d %d", &l, &c); // Caso tenha os números, vai ler.
-        
-        if(lidos == 2){
-            jogo.matriz[l-1][c-1].estadoP = -1; // Se conseguiu ler dois números, é uma coordenada do gabarito.
-        }   
-        else if(lidos == 1){ // Se leu apenas um número, ele é a quantidade de jogadas.
-            jogo.jogadas = l;
-            break; // Sai do loop para já as os números com coordenadas acabaram.
-        }
+        fscanf(load, "%d %d", &l, &c);
+        jogo.matriz[l-1][c-1].estadoP = -1;
     }
+    
+    fscanf(load, "%d", &jogo.jogadas); // Quantidade de jogadas feitas pelo usuário.
     
     for(int i = 0; i < jogo.jogadas; i++){ // Lê as jogadas já realizadas pelo jogador.
         char tipo;
@@ -488,6 +482,53 @@ void liberaMatriz(JogoSumplete *jogo){ // Libera a memória alocada dinaminament
     free((*jogo).matriz);
 }
 
+void exibirRanking() {
+    FILE *arqRank = fopen("sumplete.rnk", "r");
+    if (arqRank == NULL){ // Verifica se holve erro pra abrir o arquivo, caso não exista arquivo o programa solicita uma vitória para criar o arquivo.
+        printf("\nAinda não há nenhum ranking salvo! Vença uma partida primeiro.\n\n");
+        return;
+    }
+
+    typedef struct { // Apenas para facilitar a manipulação das informações.
+        char nome[27];
+        int tempo;
+    } Rank;
+    
+    Rank jogadores[10]; // Máximo de 10 jogadores.
+    int qtd = 0;
+
+    while(fscanf(arqRank, "%s %d", jogadores[qtd].nome, &jogadores[qtd].tempo) != EOF){ // Lê os dados que vamos colocar no ranking.
+        qtd++;
+        if (qtd >= 10) break; // Trava de segurança para não estourar o vetor.
+    }
+    fclose(arqRank); // Fecha o arquivo.
+
+    if (qtd == 0){ // Caso haja o arquivo e não tenha informações.
+        printf("\nO ranking está vazio!\n\n");
+        return;
+    }
+
+    for (int i = 0; i < qtd; i++) { // fixa a posição 'i' e compara com as próximas 'j'.   
+        for (int j = i + 1; j < qtd; j++) { // Se o jogador de cima (i) for mais lento que o de baixo (j), troca!
+            if (jogadores[i].tempo > jogadores[j].tempo){
+                Rank aux = jogadores[i];
+                jogadores[i] = jogadores[j];
+                jogadores[j] = aux;
+            }
+            
+        }
+    }
+
+    printf("\n      --- RANKING DOS MELHORES TEMPOS ---\n");
+    printf(" %-20s | %-10s\n", "Nome do Jogador", "Tempo (s)"); // Apresenta as informações com alguns espaçamentos para enquadrar.
+    printf(" -------------------------------------------------\n");
+    
+    for (int i = 0; i < qtd; i++){
+        printf(" %-20s |    %d\n", jogadores[i].nome, jogadores[i].tempo); // Printa o nome do jogador e o tempo.
+    }
+    printf(" -------------------------------------------------\n\n");
+}
+
 void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
     if(*ajuda == 1){ // Comandos dentro do menu.
         printf("\nComo jogar:\nEm cada linha e coluna, os números que ficarem no tabuleiro devem somar exatamente o valor-dica mostrado ao lado (linhas) e acima (colunas).\n\n- Cada célula pode: manter ou remover o número.\n- Números removidos não contam na soma.\n- Você decide quais números apagar até todas as somas baterem.\n\nO puzzle termina quando todas as linhas e todas as colunas atingem suas somas ao mesmo tempo.\n\nComandos disponíveis no menu:\n-[novo]: Começar um novo jogo;\n-[carregar]: Carregar um jogo salvo em arquivo;\n-[ranking]: Exibir o ranking;\n-[sair]: Sair do jogo.\n\nDigite um dos comandos anteriores: ");
@@ -503,6 +544,9 @@ int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo, int arregou){ // Test
         time_t fimJogo = time(NULL);
         (*jogo).tempo = difftime(fimJogo, inicioJogo);
         printf("Tempo total: %.0d segundos\n", (*jogo).tempo);
+        FILE *arqRank = fopen("sumplete.rnk", "a"); // Abre para adicionar no fim do arquivo
+        fprintf(arqRank, "%s %d\n", (*jogo).nome, (*jogo).tempo); // Adiciona ao arquivo o nome do player e o tempo de jogo.
+        fclose(arqRank); // Fecha o arquivo.
         liberaMatriz(jogo); // Libera a memória alocada dinamicamente.
         return 1;
     }
@@ -520,3 +564,5 @@ void limpar_buffer(){ // Para limpar o buffer.
    int ch;
    while ((ch = getchar()) != '\n' && ch != EOF);
 }
+
+////////////////////////////////////////////////////
