@@ -43,7 +43,8 @@ void ajuda(int *ajuda); // Apresenta ao usuário suas opções de comandos.
 Numero **criaMatriz(Numero **matriz, int *TAM, int *estadoPL, int *estadoPD, char nome[27]); // Função responsável por criar uma matriz.
 void imprimeMatriz(JogoSumplete *jogo); // Impressão da matriz na tela.
 void adicionar(Numero **matriz, int TAM); // Adiciona um número como verdadeiro, estadoU = 1.
-void salvarJogo(JogoSumplete jogo, time_t inicioJogo); // Salva o progresso do jogador.-
+void salvarJogo(JogoSumplete jogo, time_t inicioJogo); // Salva o progresso do jogador.
+JogoSumplete carregarJogo(); // Puxa o progresso de um jogo através de um arquivo.
 void remover(Numero **matriz, int TAM); // Adiciona um número como falso, estadoU = -1.
 void dica(Numero **matriz, int *TAM); // Remove da matriz um número não pertecente a soma.
 void resolver(Numero **matriz, int *TAM); // Resolve o jogo.
@@ -59,18 +60,18 @@ int main(){ // Main, link menu/funções
     do{
         scanf("%s", opcao);
         limpar_buffer();
-        if(strcmp(opcao, "novo") == 0){
-            jogar();
+        if(strcmp(opcao, "novo") == 0){ // Seleciona um novo jogo do zero.
+            jogar(1);
         }
-        else if(strcmp(opcao, "ajuda") == 0){
+        else if(strcmp(opcao, "ajuda") == 0){ // Imprime os comandos de ajuda do Menu.
             int ajudaMenu = 1;
             ajuda(&ajudaMenu);
         }
-        else if(strcmp(opcao, "sair") == 0){
+        else if(strcmp(opcao, "sair") == 0){ // Fecha o jogo.
             return 0;
         }
-        else if(strcmp(opcao, "carregar") == 0){
-            //função para carregar um save, mexer aqui depois
+        else if(strcmp(opcao, "carregar") == 0){ // Carrega um save através de um arquivo.
+            jogar(2);
         }
         else if(strcmp(opcao, "ranking") == 0){
             //função para mostrar o ranking, mexer aqui depois
@@ -83,16 +84,22 @@ int main(){ // Main, link menu/funções
     return 0;
 }   
 
-void jogar(){
+void jogar(int novoOuCarregar){ // Onde o jogo vai rodar.
     JogoSumplete jogo; // Criação de uma variável que vai conter informações importantes para o jogo funcionar.
-    int arregou = 0; // Recebe um se o usuário usar o comando resolver e, desse modo, não recebe a vitória.
-    jogo.estadoPL = 0; jogo.estadoPD = 0; 
+    time_t inicioJogo;
+    jogo.estadoPL = 0; jogo.estadoPD = 0; // Não sei se isso deveria estar aqui. 
+
+    if(novoOuCarregar == 1){ // Verifica se é um novo jogo ou está carregando um save.
+        jogo.matriz = criaMatriz(jogo.matriz, &jogo.TAM, &jogo.estadoPL, &jogo.estadoPD, jogo.nome); // Cria uma matriz e ela é adicionada a variável "matriz".
+        inicioJogo = time(NULL); // Inicia a contagem do tempo assim que a matriz é montada.
+    }
+    else if(novoOuCarregar == 2){ // Verifica se é um novo jogo ou está carregando um save.
+        jogo = carregarJogo();
+        inicioJogo = time(NULL) - jogo.tempo; // Início do jogo recebe o tempo atual menos o tempo já passado no save inteiro para realizar a contagem final depois.
+    }
+
     char opcao[MAX]; // Para selecionar opção.
-
-    jogo.matriz = criaMatriz(jogo.matriz, &jogo.TAM, &jogo.estadoPL, &jogo.estadoPD, jogo.nome); // Cria uma matriz e ela é adicionada a variável "matriz".
-
-    time_t inicioJogo; 
-    inicioJogo = time(NULL); // Inicia a contagem do tempo assim que a matriz é montada.
+    int arregou = 0; // Recebe um se o usuário usar o comando resolver e, desse modo, não recebe a vitória.
 
     do{ 
         imprimeMatriz(&jogo); // Printa todo o tabuleiro colorido na tela.
@@ -208,8 +215,8 @@ void imprimeMatriz(JogoSumplete *jogo){ // Talvez procurar deixar mais bonito se
     
     printf("\n"); // Um salto apenas pra ficar bunitin.
     printf("   "); // Espaço para alinhar.
-    for(int c = 1; c <= (*jogo).TAM; c++){ // Impressão dos números das colunas.
-        printf(BOLD("%2d "), c);
+    for(int i = 1; i <= (*jogo).TAM; i++){ // Impressão dos números das colunas.
+        printf(BOLD("%2d "), i);
     }
     printf("\n");
 
@@ -235,6 +242,9 @@ void imprimeMatriz(JogoSumplete *jogo){ // Talvez procurar deixar mais bonito se
                 (*jogo).jogadas++;
                 if((*jogo).matriz[i][j].estadoU == (*jogo).matriz[i][j].estadoP){
                     (*jogo).estadoUD++; // Acrescenta mais um no contador do estado usuário desligado.
+                }
+                else{
+                    (*jogo).estadoUD--; // Retira um no contador do estado usuário ligado caso ele tenha errado um número.
                 }
             }
             else if(j == (*jogo).TAM && i != (*jogo).TAM){ // Impressão das dicas da direita.
@@ -349,7 +359,7 @@ void salvarJogo(JogoSumplete jogo, time_t inicioJogo){
     fprintf(save, "%d\n", jogo.estadoPD - jogo.estadoUD); // Printa quantas números faltam para o usuário ganhar.
     for(int i = 0; i < jogo.TAM; i++){ // Printa as posições dos numeros que o usuário ainda precisa remover pra vencer.
         for(int j = 0; j < jogo.TAM; j++){
-            if((jogo.matriz[i][j].estadoP == -1) && (jogo.matriz[i][j].estadoU != -1)){
+            if(jogo.matriz[i][j].estadoP == -1){
                 fprintf(save, "%d %d\n", i+1, j+1);
             }
         }
@@ -367,11 +377,109 @@ void salvarJogo(JogoSumplete jogo, time_t inicioJogo){
     }
     fprintf(save, "%s\n", jogo.nome); // Printa o nome do jogador.
     fprintf(save, "%d", jogo.tempo); // Printa o tempo de jogo do jogador.
-    fclose(save);
+    fclose(save); // Fecha o arquivo.
+    printf("\nVocê salvou o jogo com sucesso!\n");
 }
 
-
-
+JogoSumplete carregarJogo(){ // Puxa o progresso de um jogo através de um arquivo.
+    JogoSumplete jogo;
+    char arqNome[MAX];
+    
+    printf("Digite o nome do arquivo para carregar (sem o .sum): ");
+    scanf("%s", arqNome);
+    limpar_buffer();
+    strcat(arqNome, ".sum");
+    
+    FILE *load = fopen(arqNome, "r"); // Abre pra leitura 
+    fscanf(load, "%d", &jogo.TAM); // Lê o tamanho da matriz carregada.
+    
+    jogo.matriz = malloc((jogo.TAM+1) * sizeof(Numero*)); // Aloca um espaço de memória para a matriz carregada.
+    for(int i = 0; i < jogo.TAM+1; i++){
+        jogo.matriz[i] = malloc((jogo.TAM+1) * sizeof(Numero));
+    }
+    
+    for(int i = 0; i < jogo.TAM+1; i++){ // Coloca valores neutros para as posições da matriz carregada.
+        for(int j = 0; j < jogo.TAM+1; j++){ 
+            jogo.matriz[i][j].estadoP = 1; 
+            jogo.matriz[i][j].estadoU = 0;
+            jogo.matriz[i][j].valor = 0;
+        }
+    }
+    
+    for(int i = 0; i < jogo.TAM; i++){ // Lê os valores da matriz carregada.
+        for(int j = 0; j < jogo.TAM; j++){
+            fscanf(load, "%d", &jogo.matriz[i][j].valor);
+        }
+    }
+    
+    for(int i = 0; i < jogo.TAM; i++){ // Lê os valores das dicas.
+        fscanf(load, "%d", &jogo.matriz[i][jogo.TAM].valor); 
+    }
+    for(int i = 0; i < jogo.TAM; i++){ // Lê os valores das dicas.
+        fscanf(load, "%d", &jogo.matriz[jogo.TAM][i].valor); 
+    }
+    
+    int lixo;
+    fscanf(load, "%d", &lixo); // (estadoPD - estadoUD) está dando errado, precisei tirar ele e jogar fora.
+    
+    char linha[100];
+    fgets(linha, sizeof(linha), load); // Consome a quebra de linha ('\n') que sobrou do fscanf anterior.
+    
+    while(fgets(linha, sizeof(linha), load) != NULL){ // Continua a leitura até dar erro, lendo linha por linha.
+        int l, c;
+        int lidos = sscanf(linha, "%d %d", &l, &c); // Caso tenha os números, vai ler.
+        
+        if(lidos == 2){
+            jogo.matriz[l-1][c-1].estadoP = -1; // Se conseguiu ler dois números, é uma coordenada do gabarito.
+        }   
+        else if(lidos == 1){ // Se leu apenas um número, ele é a quantidade de jogadas.
+            jogo.jogadas = l;
+            break; // Sai do loop para já as os números com coordenadas acabaram.
+        }
+    }
+    
+    for(int i = 0; i < jogo.jogadas; i++){ // Lê as jogadas já realizadas pelo jogador.
+        char tipo;
+        int l, c;
+        fscanf(load, " %c %d %d", &tipo, &l, &c);
+        if(tipo == 'a'){ // Verifica se o número foi adicionado ou removido.
+            jogo.matriz[l-1][c-1].estadoU = 1;
+        }
+        else if(tipo == 'r'){ // Verifica se o número foi adicionado ou removido.
+            jogo.matriz[l-1][c-1].estadoU = -1;
+        }
+    }
+    
+    fscanf(load, "%s", jogo.nome); // Leitura do nome do jogo carregado.
+    fscanf(load, "%d", &jogo.tempo); // Leitura do tempo do jogo carregado.
+    
+    fclose(load);
+    
+    jogo.estadoPL = 0; jogo.estadoPD = 0; // Zera os contadores do programa para não dar erro na verificação da vitória.
+    jogo.estadoUL = 0; jogo.estadoUD = 0; // Zera os contadores do usuário para não dar erro na verificação da vitória.
+    
+    for(int i = 0; i < jogo.TAM; i++){
+        for(int j = 0; j < jogo.TAM; j++){
+            if(jogo.matriz[i][j].estadoP == 1){ // Faz a contagem dos números ligados pelo programa.
+                jogo.estadoPL++;
+            }
+            else if(jogo.matriz[i][j].estadoP == -1){ // Faz a contagem dos números desligados pelo programa.
+                jogo.estadoPD++;
+            }
+            
+            if(jogo.matriz[i][j].estadoU == 1 && jogo.matriz[i][j].estadoP == 1){ // Faz a contagem dos números ligados e certos marcados pelo usuário.
+                jogo.estadoUL++;
+            }
+            if(jogo.matriz[i][j].estadoU == -1 && jogo.matriz[i][j].estadoP == -1){ // Faz a contagem dos números desligados e certos marcaados pelo usuário.
+                jogo.estadoUD++;
+            }
+        }
+    }
+    
+    printf("Jogo carregado com sucesso!\n");
+    return jogo; 
+}
+ 
 
 void liberaMatriz(JogoSumplete *jogo){ // Libera a memória alocada dinaminamente.
     for(int i = 0; i < ((*jogo).TAM)+1; i++){
@@ -391,7 +499,7 @@ void ajuda(int *ajuda){ // Printa os comandos disponíveis para o usuário.
 
 int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo, int arregou){ // Testa se o usuário terminou o jogo normalmente ou usando o comando "resolver".
     if(((*jogo).estadoUD == (*jogo).estadoPD) && arregou == 0){ // Terminou o jogo da maneira correta.
-        printf("Parabéns seu fudido, você ganhou!\n");
+        printf("Parabéns, você ganhou!!!\n");
         time_t fimJogo = time(NULL);
         (*jogo).tempo = difftime(fimJogo, inicioJogo);
         printf("Tempo total: %.0d segundos\n", (*jogo).tempo);
@@ -399,7 +507,7 @@ int verificaVitoria(JogoSumplete *jogo, time_t inicioJogo, int arregou){ // Test
         return 1;
     }
     else if(arregou == 1){ // Usou o comando resolver 
-        printf("Mais sorte na próxima vez.\n");
+        printf("\nMais sorte na próxima vez.\n");
         liberaMatriz(jogo); // Libera a memória alocada dinamicamente.
         return -1;
     }
